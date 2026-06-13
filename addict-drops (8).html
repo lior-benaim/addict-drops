@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ADDICT — בחירות משפיעניות</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pink:#D4537E;--pink-light:#FBEAF0;--pink-mid:#F4C0D1;
+  --dark:#2C2C2A;--muted:#888780;
+  --bg:#F8F7F5;--card:#fff;--border:#E8E6E0;--text:#2C2C2A;
+  --success-bg:#EAF3DE;--success-text:#3B6D11;--danger-text:#A32D2D;
+  --info-bg:#E6F1FB;--info-text:#185FA5;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);direction:rtl}
+input,button,textarea,select{font-family:inherit}
+.hidden{display:none!important}
+
+/* AUTH */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:380px;text-align:center}
+.auth-logo{font-size:24px;font-weight:600;letter-spacing:4px;margin-bottom:4px}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:2rem}
+.auth-box input{width:100%;margin-bottom:12px;padding:11px 14px;font-size:15px;border:1px solid var(--border);border-radius:10px;background:#FAFAF9;color:var(--text);outline:none;transition:border-color .15s}
+.auth-box input:focus{border-color:var(--pink)}
+.btn-primary{width:100%;padding:12px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:15px;cursor:pointer;font-weight:500}
+.btn-primary:hover{opacity:.85}
+.auth-error{font-size:13px;color:var(--danger-text);margin-top:10px;min-height:20px}
+
+/* ADMIN */
+#admin-screen{min-height:100vh;background:var(--bg)}
+.admin-header{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.admin-logo{font-size:18px;font-weight:600;letter-spacing:3px}
+.admin-tabs{display:flex;gap:4px}
+.tab-btn{padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;font-size:13px;cursor:pointer;color:var(--muted);transition:all .15s}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn:hover:not(.active){background:var(--bg)}
+.admin-content{padding:1.5rem;max-width:960px;margin:0 auto}
+.admin-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:1.25rem}
+.section-title{font-size:15px;font-weight:500;margin-bottom:1rem}
+.btn-sm{padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-size:13px;cursor:pointer;color:var(--text)}
+.btn-sm:hover{background:#F1EFE8}
+.btn-pink{padding:10px 20px;background:var(--pink);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500}
+.btn-pink:hover{opacity:.88}
+.btn-pink:disabled{opacity:.5;cursor:not-allowed}
+
+/* DROP BUILDER */
+.drop-name-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem}
+.drop-name-row input{flex:1;min-width:200px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#FAFAF9;color:var(--text);outline:none}
+.drop-name-row input:focus{border-color:var(--pink)}
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:all .2s;background:#FAFAF9;margin-bottom:1rem}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--pink);background:var(--pink-light)}
+.upload-zone i{font-size:32px;color:var(--muted);margin-bottom:.5rem;display:block}
+.upload-zone p{font-size:14px;color:var(--muted)}
+.upload-zone span{font-size:12px;color:var(--pink);display:block;margin-top:4px}
+.staging-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem;margin-bottom:1rem}
+.staging-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative}
+.staging-img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.staging-footer{padding:7px 9px;font-size:12px;min-height:32px;display:flex;align-items:center}
+.staging-name-display{color:var(--text);font-weight:500;flex:1;line-height:1.3;font-size:11px}
+.staging-name-input{width:100%;border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:11px;background:var(--card);color:var(--text);outline:none}
+.staging-name-input:focus{border-color:var(--pink)}
+.staging-name-loading{color:var(--muted);font-style:italic;flex:1;font-size:11px}
+.staging-remove{position:absolute;top:5px;left:5px;background:rgba(0,0,0,.55);color:#fff;border:none;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.ai-scanning{position:absolute;top:5px;right:5px;background:rgba(212,83,126,.85);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px}
+
+/* ADMIN DROP PREVIEW */
+#admin-drop-preview{margin-top:1.5rem}
+.preview-label{font-size:13px;color:var(--muted);margin-bottom:1rem;display:flex;align-items:center;gap:6px}
+
+/* INFLUENCERS TABLE */
+.inf-table{width:100%;border-collapse:collapse;font-size:13px}
+.inf-table th{text-align:right;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:400}
+.inf-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.inf-table tr:last-child td{border-bottom:none}
+.inf-table tr:hover td{background:#FAFAF9}
+.limit-input{width:65px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center;background:#FAFAF9;color:var(--text);outline:none}
+.limit-input:focus{border-color:var(--pink)}
+.badge-done{font-size:11px;background:var(--success-bg);color:var(--success-text);padding:3px 9px;border-radius:20px}
+.btn-confirm-limit{padding:5px 12px;background:var(--dark);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer}
+.btn-confirm-limit:hover{opacity:.85}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px}
+.dot-on{background:#9FE1CB}.dot-off{background:#D3D1C7}
+
+/* ORDERS */
+.orders-empty{text-align:center;padding:3rem;color:var(--muted);font-size:14px}
+.orders-empty i{font-size:40px;display:block;margin-bottom:1rem}
+.order-card{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:1rem;overflow:hidden}
+.order-card.approved{border-color:#9FE1CB}
+.order-header{padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer}
+.order-header:hover{background:#FAFAF9}
+.order-inf-name{font-size:15px;font-weight:500}
+.order-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.order-body{padding:1rem 1.25rem}
+.order-item-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.order-item-row:last-child{border-bottom:none}
+.order-item-img{width:44px;height:59px;object-fit:cover;border-radius:6px;background:#F1EFE8;flex-shrink:0}
+.order-item-name{font-size:13px;font-weight:500}
+.order-item-detail{font-size:12px;color:var(--muted);margin-top:2px}
+.order-total{font-size:13px;color:var(--muted);padding:8px 0;border-top:1px solid var(--border);margin:8px 0}
+.order-total span{font-weight:500;color:var(--text)}
+.order-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:1rem}
+.btn-approve{padding:9px 18px;background:var(--dark);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500}
+.btn-approve:hover{opacity:.88}
+.btn-shopify{padding:9px 18px;background:#96BF48;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500}
+.btn-shopify:hover{opacity:.88}
+.btn-delete-order{padding:9px 12px;border:1px solid #F7C1C1;border-radius:8px;background:transparent;font-size:13px;cursor:pointer;color:var(--danger-text)}
+.shopify-store-input{padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#FAFAF9;color:var(--text);outline:none;width:100%;max-width:300px}
+.shopify-store-input:focus{border-color:var(--pink)}
+
+/* INFLUENCER */
+#influencer-screen{min-height:100vh;background:var(--bg)}
+.inf-header{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.inf-logo{font-size:18px;font-weight:600;letter-spacing:3px}
+.inf-drop-name{font-size:12px;color:var(--muted);margin-top:2px}
+.cart-btn{position:relative;padding:9px 16px;background:var(--dark);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.cart-btn:hover{opacity:.85}
+.cart-badge{position:absolute;top:-7px;right:-7px;background:var(--pink);color:#fff;font-size:11px;width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600}
+.limit-bar{background:var(--card);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted)}
+.limit-track{flex:1;height:5px;background:#F1EFE8;border-radius:3px;overflow:hidden}
+.limit-fill{height:100%;background:var(--pink);border-radius:3px;transition:width .3s}
+
+/* PRODUCTS GRID */
+.products-grid{padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.25rem}
+.product-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s,transform .15s;border:2px solid transparent}
+.product-card:hover{transform:translateY(-2px)}
+.product-card.in-cart{border-color:var(--pink)}
+.product-img-wrap{position:relative;cursor:zoom-in}
+.product-img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.zoom-hint{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.45);color:#fff;font-size:11px;padding:3px 8px;border-radius:20px;backdrop-filter:blur(4px)}
+.in-cart-overlay{position:absolute;top:8px;right:8px;background:var(--pink);color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.product-footer{padding:10px 12px}
+.product-name{font-size:12px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.4;min-height:18px}
+.product-name.loading{color:var(--muted);font-style:italic}
+.want-btn{width:100%;padding:8px;background:var(--dark);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500}
+.want-btn:hover{opacity:.85}
+
+/* ZOOM POPUP */
+.zoom-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;display:flex;align-items:center;justify-content:center;padding:1rem}
+.zoom-img{max-width:100%;max-height:85vh;object-fit:contain;border-radius:12px}
+.zoom-close{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.15);color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.zoom-close:hover{background:rgba(255,255,255,.3)}
+
+/* SIZE POPUP */
+.size-popup-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:flex-end;justify-content:center}
+.size-popup{background:var(--card);border-radius:20px 20px 0 0;padding:1.5rem;width:100%;max-width:480px;position:relative}
+.size-popup-img{width:70px;height:93px;object-fit:cover;border-radius:8px;margin:0 auto .75rem;display:block;cursor:zoom-in}
+.size-popup-name{font-size:14px;font-weight:500;text-align:center;margin-bottom:.25rem}
+.size-popup-sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:1rem}
+.size-input-row{display:flex;gap:8px;align-items:center;margin-bottom:1.25rem}
+.size-text-input{flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:15px;text-align:center;outline:none;color:var(--text);background:#FAFAF9}
+.size-text-input:focus{border-color:var(--pink)}
+.size-hint{font-size:11px;color:var(--muted);text-align:center;margin-bottom:1rem}
+.qty-popup-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:1.25rem}
+.qty-popup-row span{font-size:13px;color:var(--muted)}
+.qty-ctrl{display:flex;align-items:center;gap:10px}
+.qty-btn-p{width:32px;height:32px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.qty-btn-p:hover{background:#F1EFE8}
+.qty-num-p{font-size:16px;font-weight:500;min-width:24px;text-align:center}
+.popup-add-btn{width:100%;padding:13px;background:var(--pink);color:#fff;border:none;border-radius:10px;font-size:15px;cursor:pointer;font-weight:500}
+.popup-add-btn:hover{opacity:.88}
+.popup-add-btn:disabled{opacity:.4;cursor:not-allowed}
+.popup-close{position:absolute;top:1rem;left:1rem;background:none;border:none;cursor:pointer;font-size:22px;color:var(--muted)}
+
+/* CART */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;justify-content:flex-start}
+.cart-panel{background:var(--card);width:360px;max-width:95vw;height:100%;display:flex;flex-direction:column;border-left:1px solid var(--border)}
+.cart-header{padding:1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.cart-title{font-size:16px;font-weight:500}
+.close-btn{background:none;border:none;cursor:pointer;font-size:22px;color:var(--muted);line-height:1;padding:0}
+.cart-items{flex:1;overflow-y:auto;padding:1rem}
+.cart-item{padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:10px}
+.cart-item:last-child{border-bottom:none}
+.cart-item-img{width:50px;height:67px;object-fit:cover;border-radius:6px;background:#F1EFE8;flex-shrink:0}
+.cart-item-name{font-size:13px;font-weight:500;margin-bottom:3px}
+.cart-item-detail{font-size:12px;color:var(--muted)}
+.cart-item-remove{background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;padding:0;line-height:1;align-self:flex-start}
+.cart-empty{text-align:center;color:var(--muted);padding:3rem;font-size:14px}
+.cart-footer{padding:1.25rem;border-top:1px solid var(--border)}
+.cart-total{font-size:13px;color:var(--muted);margin-bottom:12px}
+.cart-total span{font-weight:500;color:var(--text)}
+.cart-notes{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:vertical;min-height:60px;margin-bottom:12px;background:#FAFAF9;color:var(--text);outline:none}
+.cart-notes:focus{border-color:var(--pink)}
+.submit-btn{width:100%;padding:13px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:15px;cursor:pointer;font-weight:500}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed}
+
+#success-screen{display:flex;align-items:center;justify-content:center;min-height:80vh;padding:2rem}
+.success-box{text-align:center;max-width:400px}
+.success-icon{font-size:56px;color:var(--pink);margin-bottom:1rem}
+.success-title{font-size:22px;font-weight:500;margin-bottom:.5rem}
+.success-sub{font-size:14px;color:var(--muted);line-height:1.7}
+.no-drop{text-align:center;padding:4rem 2rem;color:var(--muted);font-size:14px}
+.no-drop i{font-size:40px;display:block;margin-bottom:1rem}
+
+@media(max-width:600px){
+  .products-grid{grid-template-columns:repeat(2,1fr);padding:1rem;gap:.75rem}
+  .admin-tabs{gap:2px}.tab-btn{padding:7px 9px;font-size:12px}
+  .staging-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">ADDICT</div>
+    <div class="auth-sub">בחירות משפיעניות</div>
+    <input type="text" id="auth-user" placeholder="שם משתמש" autocomplete="username"/>
+    <input type="password" id="auth-pass" placeholder="סיסמה" autocomplete="current-password"/>
+    <button class="btn-primary" onclick="doLogin()">כניסה</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<div id="admin-screen" class="hidden">
+  <div class="admin-header">
+    <div class="admin-logo">ADDICT</div>
+    <div class="admin-tabs">
+      <button class="tab-btn active" onclick="showTab('drop')" id="tab-drop">דרופ</button>
+      <button class="tab-btn" onclick="showTab('orders')" id="tab-orders">הזמנות <span id="orders-badge" style="display:none;background:var(--pink);color:#fff;font-size:10px;padding:1px 6px;border-radius:20px;margin-right:3px"></span></button>
+      <button class="tab-btn" onclick="showTab('influencers')" id="tab-influencers">משפיעניות</button>
+    </div>
+    <button class="btn-sm" onclick="logout()"><i class="ti ti-logout"></i></button>
+  </div>
+
+  <div class="admin-content">
+    <!-- DROP TAB -->
+    <div id="tab-content-drop">
+      <div class="admin-section">
+        <div class="section-title">הגדרות שופיפיי</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="text" class="shopify-store-input" id="shopify-domain" placeholder="שם החנות (לדוגמה: addictonline)" oninput="localStorage.setItem('addict_shopify',this.value.trim())"/>
+          <span style="font-size:12px;color:var(--muted)">.myshopify.com</span>
+        </div>
+      </div>
+      <div class="admin-section">
+        <div class="section-title">בניית דרופ חדש</div>
+        <div class="drop-name-row">
+          <input type="text" id="drop-label-input" placeholder="שם הדרופ — לדוגמה: דרופ נשים יוני 2026" style="max-width:420px"/>
+        </div>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+          <i class="ti ti-photo-up"></i>
+          <p>גררי תמונות לכאן או לחצי לבחירה</p>
+          <span>לאחר ההעלאה הזיני שם לכל פריט</span>
+          <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)"/>
+        </div>
+        <div class="staging-grid" id="staging-grid"></div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <button class="btn-pink" id="publish-btn" onclick="publishDrop()" disabled>
+            <i class="ti ti-check"></i> פרסמי דרופ
+          </button>
+          <span id="publish-status" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+      </div>
+
+      <!-- ADMIN PREVIEW -->
+      <div id="admin-drop-preview" class="hidden">
+        <div class="preview-label"><i class="ti ti-eye" style="color:var(--pink)"></i> תצוגת דרופ — כפי שהמשפיעניות רואות</div>
+        <div class="products-grid" id="admin-preview-grid" style="padding:0;margin-bottom:1.5rem"></div>
+      </div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div id="tab-content-orders" class="hidden">
+      <div id="orders-list"></div>
+    </div>
+
+    <!-- INFLUENCERS TAB -->
+    <div id="tab-content-influencers" class="hidden">
+      <div class="admin-section">
+        <div class="section-title">משפיעניות</div>
+        <table class="inf-table">
+          <thead><tr><th>שם</th><th>כניסה</th><th style="text-align:center">הגבלת פריטים</th><th style="text-align:center">סטטוס</th></tr></thead>
+          <tbody id="inf-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="influencer-screen" class="hidden">
+  <div class="inf-header">
+    <div>
+      <div class="inf-logo">ADDICT</div>
+      <div class="inf-drop-name" id="inf-drop-label"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:13px;color:var(--muted)" id="inf-welcome"></span>
+      <button class="cart-btn" onclick="toggleCart()">
+        <i class="ti ti-shopping-bag"></i> הסל
+        <span class="cart-badge" id="cart-count">0</span>
+      </button>
+      <button class="btn-sm" onclick="logout()"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+  <div class="limit-bar">
+    <span id="limit-label"></span>
+    <div class="limit-track"><div class="limit-fill" id="limit-fill" style="width:0%"></div></div>
+    <span id="limit-nums"></span>
+  </div>
+  <div id="no-drop-msg" class="no-drop hidden"><i class="ti ti-clock"></i>אין דרופ פעיל כרגע</div>
+  <div class="products-grid hidden" id="products-grid"></div>
+  <div id="success-screen" class="hidden">
+    <div class="success-box">
+      <div class="success-icon"><i class="ti ti-circle-check"></i></div>
+      <div class="success-title">הבחירות נשמרו!</div>
+      <div class="success-sub" id="success-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ZOOM POPUP -->
+<div class="zoom-bg hidden" id="zoom-bg" onclick="closeZoom(event)">
+  <button class="zoom-close" onclick="$('zoom-bg').classList.add('hidden')">×</button>
+  <img class="zoom-img" id="zoom-img" src="" alt=""/>
+</div>
+
+<!-- SIZE POPUP -->
+<div class="size-popup-bg hidden" id="size-popup-bg" onclick="closeSizeBg(event)">
+  <div class="size-popup">
+    <button class="popup-close" onclick="$('size-popup-bg').classList.add('hidden')">×</button>
+    <img id="popup-img" class="size-popup-img" src="" alt="" onclick="openZoomFrom('popup')"/>
+    <div class="size-popup-name" id="popup-name"></div>
+    <div class="size-popup-sub">הגדילי את התמונה לראיית המידות, ואז כתבי את המידה הרצויה 👆</div>
+    <div class="size-input-row">
+      <input type="text" class="size-text-input" id="size-text-input" placeholder="כתבי מידה — לדוגמה: S/M" oninput="updatePopupBtn()"/>
+    </div>
+    <div class="qty-popup-row">
+      <span>כמות:</span>
+      <div class="qty-ctrl">
+        <button class="qty-btn-p" onclick="changePopupQty(-1)">−</button>
+        <span class="qty-num-p" id="popup-qty">1</span>
+        <button class="qty-btn-p" onclick="changePopupQty(1)">+</button>
+      </div>
+    </div>
+    <button class="popup-add-btn" id="popup-add-btn" onclick="confirmAdd()" disabled>הוסיפי לסל</button>
+  </div>
+</div>
+
+<!-- CART -->
+<div class="cart-overlay hidden" id="cart-overlay" onclick="closeCartOutside(event)">
+  <div class="cart-panel">
+    <div class="cart-header">
+      <div class="cart-title">הבחירות שלי</div>
+      <button class="close-btn" onclick="toggleCart()">×</button>
+    </div>
+    <div class="cart-items" id="cart-items-list"><div class="cart-empty">הסל ריק</div></div>
+    <div class="cart-footer">
+      <div class="cart-total">סה"כ: <span id="cart-total-count">0</span> פריטים</div>
+      <textarea class="cart-notes" id="cart-notes" placeholder="הערות (אופציונלי)..."></textarea>
+      <button class="submit-btn" id="submit-btn" onclick="submitOrder()" disabled>שלחי בחירות</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_USER='admin',ADMIN_PASS='addict2024';
+const STORAGE_KEY='addict_active_drop';
+const ORDERS_KEY='addict_orders';
+const MAX_IMG_W=700,IMG_Q=0.78;
+
+const INFLUENCERS=[
+  {name:'ספיר בורגיל',username:'ספיר',password:'ספיר',limit:null,submitted:false},
+  {name:'עינב בובליל',username:'עינב',password:'עינב',limit:null,submitted:false},
+  {name:'נופר מור',username:'נופר',password:'נופר',limit:null,submitted:false},
+  {name:'בר כהן',username:'בר',password:'בר',limit:null,submitted:false},
+  {name:'נטעלי וקנין',username:'נטעלי',password:'נטעלי',limit:null,submitted:false},
+  {name:'שירן אביטל',username:'שירן',password:'שירן',limit:null,submitted:false},
+  {name:'אניה מרטירוסוב',username:'אניה',password:'אניה',limit:null,submitted:false},
+  {name:'ליבר בלילתי',username:'ליבר',password:'ליבר',limit:null,submitted:false},
+  {name:'דניאל עמית',username:'דניאל',password:'דניאל',limit:null,submitted:false},
+  {name:'שיר ביטון',username:'שיר',password:'שיר',limit:null,submitted:false},
+  {name:'ירדן פולק',username:'ירדן',password:'ירדן',limit:null,submitted:false},
+  {name:'מרינה בראל',username:'מרינה',password:'מרינה',limit:null,submitted:false},
+  {name:'שי נתנזון',username:'שי',password:'שי',limit:null,submitted:false},
+  {name:'דורין דותן',username:'דורין',password:'דורין',limit:null,submitted:false},
+  {name:'ניצן גריב',username:'ניצן',password:'ניצן',limit:null,submitted:false},
+];
+
+let state={currentUser:null,isAdmin:false,staging:[],cart:[],popup:{pi:null,qty:1},zoomSrc:null};
+const $=id=>document.getElementById(id);
+
+function showScreen(n){['auth','admin','influencer'].forEach(s=>$(s+'-screen').classList.toggle('hidden',s!==n));}
+
+function showTab(t){
+  ['drop','orders','influencers'].forEach(x=>{
+    $('tab-'+x).classList.toggle('active',x===t);
+    $('tab-content-'+x).classList.toggle('hidden',x!==t);
+  });
+  if(t==='orders')renderOrders();
+  if(t==='influencers')renderInfTable();
+}
+
+function doLogin(){
+  const u=$('auth-user').value.trim(),p=$('auth-pass').value.trim();
+  $('auth-error').textContent='';
+  if(u===ADMIN_USER&&p===ADMIN_PASS){
+    state.isAdmin=true;state.currentUser={name:'מנהל'};
+    showScreen('admin');
+    $('shopify-domain').value=localStorage.getItem('addict_shopify')||'';
+    updateOrdersBadge();
+    showAdminDropPreview();
+    return;
+  }
+  const inf=INFLUENCERS.find(i=>i.username===u&&i.password===p);
+  if(inf){state.isAdmin=false;state.currentUser=inf;state.cart=[];showScreen('influencer');$('inf-welcome').textContent='שלום, '+inf.name;loadInfluencerView();return;}
+  $('auth-error').textContent='שם משתמש או סיסמה שגויים';
+}
+
+function logout(){
+  state.currentUser=null;state.isAdmin=false;state.cart=[];
+  $('auth-user').value='';$('auth-pass').value='';$('auth-error').textContent='';
+  showScreen('auth');
+}
+
+/* INFLUENCERS TABLE */
+function renderInfTable(){
+  $('inf-tbody').innerHTML=INFLUENCERS.map((inf,i)=>`
+    <tr>
+      <td><span class="dot ${inf.submitted?'dot-on':'dot-off'}"></span>${inf.name}</td>
+      <td style="color:var(--muted);font-size:12px">${inf.username}</td>
+      <td style="text-align:center;display:flex;gap:6px;align-items:center;justify-content:center">
+        <input class="limit-input" type="number" min="1" value="${inf.limit||''}" placeholder="∞" id="limit-inp-${i}"/>
+        <button class="btn-confirm-limit" onclick="confirmLimit(${i})">✓</button>
+      </td>
+      <td style="text-align:center">${inf.submitted?'<span class="badge-done">הגישה</span>':'<span style="font-size:12px;color:var(--muted)">ממתינה</span>'}</td>
+    </tr>`).join('');
+}
+
+function confirmLimit(i){
+  const val=$(`limit-inp-${i}`).value;
+  INFLUENCERS[i].limit=val?parseInt(val):null;
+  const btn=document.querySelector(`#limit-inp-${i}`).nextElementSibling;
+  btn.textContent='✓';btn.style.background='#3B6D11';
+  setTimeout(()=>{btn.style.background='';btn.textContent='✓';},1500);
+}
+
+/* ORDERS */
+function getOrders(){try{return JSON.parse(localStorage.getItem(ORDERS_KEY)||'[]');}catch(e){return[];}}
+function saveOrders(o){localStorage.setItem(ORDERS_KEY,JSON.stringify(o));}
+function updateOrdersBadge(){
+  const n=getOrders().filter(o=>o.status==='pending').length;
+  const b=$('orders-badge');
+  b.textContent=n;b.style.display=n?'inline':'none';
+}
+function renderOrders(){
+  const orders=getOrders();
+  const list=$('orders-list');
+  if(!orders.length){list.innerHTML='<div class="orders-empty"><i class="ti ti-inbox"></i>אין הזמנות עדיין</div>';return;}
+  list.innerHTML=orders.map((o,i)=>`
+    <div class="order-card ${o.status==='approved'?'approved':''}">
+      <div class="order-header" onclick="this.nextElementSibling.classList.toggle('hidden')">
+        <div>
+          <div class="order-inf-name">${o.infName}</div>
+          <div class="order-meta">${o.dropLabel} · ${o.date} · ${o.total} פריטים</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${o.status==='pending'?'<span style="font-size:11px;background:var(--info-bg);color:var(--info-text);padding:3px 9px;border-radius:20px">ממתין</span>':'<span style="font-size:11px;background:var(--success-bg);color:var(--success-text);padding:3px 9px;border-radius:20px">אושר</span>'}
+          <i class="ti ti-chevron-down" style="color:var(--muted)"></i>
+        </div>
+      </div>
+      <div class="order-body hidden">
+        ${o.items.map(item=>`
+          <div class="order-item-row">
+            <img class="order-item-img" src="${item.dataUrl}" alt="${item.name}"/>
+            <div>
+              <div class="order-item-name">${item.name}</div>
+              <div class="order-item-detail">מידה: ${item.size} · כמות: ${item.qty}</div>
+            </div>
+          </div>`).join('')}
+        ${o.notes?`<div style="font-size:12px;color:var(--muted);margin:8px 0;padding:8px;background:#FAFAF9;border-radius:8px">הערות: ${o.notes}</div>`:''}
+        <div class="order-total">סה"כ: <span>${o.total} פריטים</span></div>
+        <div class="order-actions">
+          ${o.status==='pending'?`<button class="btn-approve" onclick="approveOrder(${i})"><i class="ti ti-check"></i> אשרי</button>`:'<span style="font-size:12px;color:var(--success-text)">✓ אושר</span>'}
+          <button class="btn-shopify" onclick="openShopify(${i})"><i class="ti ti-external-link"></i> פתחי בשופיפיי</button>
+          <button class="btn-delete-order" onclick="deleteOrder(${i})"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function approveOrder(i){const o=getOrders();o[i].status='approved';saveOrders(o);updateOrdersBadge();renderOrders();}
+function deleteOrder(i){if(!confirm('למחוק?'))return;const o=getOrders();o.splice(i,1);saveOrders(o);updateOrdersBadge();renderOrders();}
+function openShopify(i){
+  const o=getOrders()[i];
+  const domain=localStorage.getItem('addict_shopify')||'';
+  if(!domain){alert('נא להזין שם חנות שופיפיי בלשונית דרופ');return;}
+  const note=`הזמנת משפיענית: ${o.infName}\nדרופ: ${o.dropLabel}\n\n${o.items.map(it=>`${it.name} | מידה: ${it.size} | כמות: ${it.qty}`).join('\n')}\n\nסה"כ: ${o.total} פריטים${o.notes?'\n\nהערות: '+o.notes:''}`;
+  window.open(`https://${domain}.myshopify.com/admin/draft_orders/new?note=${encodeURIComponent(note)}&tags=${encodeURIComponent('משפיענית,'+o.infName)}`,'_blank');
+}
+
+/* IMAGE UPLOAD */
+function compressImage(file){
+  return new Promise(resolve=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const ratio=Math.min(1,MAX_IMG_W/img.width);
+        const w=Math.round(img.width*ratio),h=Math.round(img.height*ratio);
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(c.toDataURL('image/jpeg',IMG_Q));
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+function extractName(dataUrl){ return Promise.resolve(null); }
+  try{
+    const base64=dataUrl.split(',')[1];
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:60,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64}},
+          {type:'text',text:'מה שם המוצר הכתוב על התמונה? החזר רק את השם בעברית, ללא שום דבר אחר. לדוגמה: "מכנסי מולאן שחורים"'}
+        ]}]
+      })
+    });
+    const d=await res.json();
+    const name=d.content?.[0]?.text?.trim().replace(/^["״]|["״]$/g,'');
+    return name&&name.length>1&&name.length<60?name:null;
+  }catch(e){return null;}
+}
+
+const uploadZone=$('upload-zone');
+uploadZone.addEventListener('dragover',e=>{e.preventDefault();uploadZone.classList.add('dragover')});
+uploadZone.addEventListener('dragleave',()=>uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop',e=>{e.preventDefault();uploadZone.classList.remove('dragover');handleFiles(e.dataTransfer.files)});
+
+async function handleFiles(files){
+  for(const file of Array.from(files)){
+    if(!file.type.startsWith('image/'))continue;
+    const dataUrl=await compressImage(file);
+    state.staging.push({id:Date.now()+Math.random(),dataUrl,name:''});
+    renderStaging();
+  }
+}
+
+function renderStaging(){
+  const grid=$('staging-grid');
+  if(!state.staging.length){grid.innerHTML='';$('publish-btn').disabled=true;return;}
+  $('publish-btn').disabled=false;
+  grid.innerHTML=state.staging.map((p,i)=>`
+    <div class="staging-card">
+      <img class="staging-img" src="${p.dataUrl}" alt="מוצר" onclick="openZoom('${p.dataUrl.replace(/'/g,"\\'")}')"/>
+      <div class="staging-footer">
+        <input class="staging-name-input" type="text" value="${p.name||''}" placeholder="שם הפריט..."
+          oninput="state.staging[${i}].name=this.value"/>
+      </div>
+      <button class="staging-remove" onclick="removeStaging(${i})">×</button>
+    </div>`).join('');
+}
+
+function removeStaging(i){state.staging.splice(i,1);renderStaging();}
+
+function publishDrop(){
+  const label=$('drop-label-input').value.trim();
+  if(!label){alert('נא להזין שם לדרופ');return;}
+  if(!state.staging.length){alert('נא להוסיף מוצרים');return;}
+  const drop={label,products:state.staging.map(p=>({id:p.id,name:p.name||'פריט',dataUrl:p.dataUrl}))};
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(drop));
+    $('publish-status').innerHTML=`<span style="color:var(--success-text)">✓ פורסם — ${drop.products.length} מוצרים</span>`;
+    INFLUENCERS.forEach(inf=>inf.submitted=false);
+    state.staging=[];renderStaging();
+    showAdminDropPreview();
+  }catch(e){
+    $('publish-status').innerHTML='<span style="color:var(--danger-text)">שגיאה — נסי פחות תמונות</span>';
+  }
+}
+
+function showAdminDropPreview(){
+  let drop=null;
+  try{const s=localStorage.getItem(STORAGE_KEY);if(s)drop=JSON.parse(s);}catch(e){}
+  if(!drop||!drop.products||!drop.products.length){$('admin-drop-preview').classList.add('hidden');return;}
+  $('admin-drop-preview').classList.remove('hidden');
+  $('admin-preview-grid').innerHTML=drop.products.map((p,pi)=>`
+    <div class="product-card">
+      <div class="product-img-wrap" onclick="openZoom('${p.dataUrl.replace(/'/g,"\\'")}')">
+        <img class="product-img" src="${p.dataUrl}" alt="${p.name}" loading="lazy"/>
+        <div class="zoom-hint"><i class="ti ti-zoom-in"></i></div>
+      </div>
+      <div class="product-footer">
+        <div class="product-name">${p.name}</div>
+        <button class="want-btn" style="opacity:.5;cursor:default">את זה אני רוצה</button>
+      </div>
+    </div>`).join('');
+}
+
+/* INFLUENCER VIEW */
+function loadInfluencerView(){
+  $('success-screen').classList.add('hidden');
+  $('products-grid').classList.add('hidden');
+  $('no-drop-msg').classList.add('hidden');
+  updateLimitBar();updateCartUI();
+  let drop=null;
+  try{const s=localStorage.getItem(STORAGE_KEY);if(s)drop=JSON.parse(s);}catch(e){}
+  if(!drop||!drop.products||!drop.products.length){$('inf-drop-label').textContent='אין דרופ פעיל';$('no-drop-msg').classList.remove('hidden');return;}
+  $('inf-drop-label').textContent=drop.label;
+  renderProducts(drop.products);
+}
+
+function renderProducts(products){
+  $('no-drop-msg').classList.add('hidden');
+  $('products-grid').classList.remove('hidden');
+  $('products-grid').innerHTML=products.map((p,pi)=>{
+    const inCart=state.cart.filter(c=>c.pi===pi).reduce((a,c)=>a+c.qty,0);
+    return `<div class="product-card ${inCart?'in-cart':''}" id="pc-${pi}">
+      <div class="product-img-wrap" onclick="openZoom('${p.dataUrl.replace(/'/g,"\\'")}')">
+        <img class="product-img" src="${p.dataUrl}" alt="${p.name}" loading="lazy"/>
+        <div class="zoom-hint"><i class="ti ti-zoom-in"></i> הגדילי לראיית מידות</div>
+        ${inCart?`<div class="in-cart-overlay">בסל: ${inCart}</div>`:''}
+      </div>
+      <div class="product-footer">
+        <div class="product-name">${p.name}</div>
+        <button class="want-btn" onclick="openSizePopup(${pi})">את זה אני רוצה</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ZOOM */
+function openZoom(src){
+  $('zoom-img').src=src;
+  $('zoom-bg').classList.remove('hidden');
+}
+function openZoomFrom(from){
+  if(from==='popup'){
+    const src=$('popup-img').src;
+    $('zoom-img').src=src;
+    $('zoom-bg').classList.remove('hidden');
+  }
+}
+function closeZoom(e){if(e.target===$('zoom-bg'))$('zoom-bg').classList.add('hidden');}
+
+/* SIZE POPUP */
+function openSizePopup(pi){
+  let drop=null;
+  try{drop=JSON.parse(localStorage.getItem(STORAGE_KEY));}catch(e){}
+  const p=drop.products[pi];
+  state.popup={pi,qty:1};
+  $('popup-img').src=p.dataUrl;
+  $('popup-name').textContent=p.name||'';
+  $('popup-qty').textContent='1';
+  $('size-text-input').value='';
+  $('popup-add-btn').disabled=true;
+  $('size-popup-bg').classList.remove('hidden');
+  setTimeout(()=>$('size-text-input').focus(),200);
+}
+
+function updatePopupBtn(){
+  $('popup-add-btn').disabled=$('size-text-input').value.trim().length===0;
+}
+
+function changePopupQty(d){
+  state.popup.qty=Math.max(1,(state.popup.qty||1)+d);
+  $('popup-qty').textContent=state.popup.qty;
+}
+
+function closeSizeBg(e){if(e.target===$('size-popup-bg'))$('size-popup-bg').classList.add('hidden');}
+
+function confirmAdd(){
+  const inf=state.currentUser,{pi,qty}=state.popup;
+  const size=$('size-text-input').value.trim();
+  if(!size)return;
+  const total=state.cart.reduce((a,c)=>a+c.qty,0);
+  if(inf.limit&&total+qty>inf.limit){alert(`ניתן לבחור עד ${inf.limit} פריטים בסה"כ`);return;}
+  let drop=null;
+  try{drop=JSON.parse(localStorage.getItem(STORAGE_KEY));}catch(e){}
+  const p=drop.products[pi];
+  const existing=state.cart.find(c=>c.pi===pi&&c.size===size);
+  if(existing)existing.qty+=qty;
+  else state.cart.push({pi,name:p.name||'פריט',size,qty,dataUrl:p.dataUrl});
+  $('size-popup-bg').classList.add('hidden');
+  updateCartUI();refreshCard(pi);
+}
+
+function refreshCard(pi){
+  const card=$(`pc-${pi}`);if(!card)return;
+  const inCart=state.cart.filter(c=>c.pi===pi).reduce((a,c)=>a+c.qty,0);
+  card.classList.toggle('in-cart',inCart>0);
+  const wrap=card.querySelector('.product-img-wrap');
+  let ov=wrap.querySelector('.in-cart-overlay');
+  if(inCart>0){if(!ov){ov=document.createElement('div');ov.className='in-cart-overlay';wrap.appendChild(ov);}ov.textContent='בסל: '+inCart;}
+  else if(ov)ov.remove();
+}
+
+function updateCartUI(){
+  const total=state.cart.reduce((a,c)=>a+c.qty,0);
+  $('cart-count').textContent=total;
+  $('cart-total-count').textContent=total;
+  $('submit-btn').disabled=total===0;
+  updateLimitBar();renderCartItems();
+}
+
+function updateLimitBar(){
+  const inf=state.currentUser;if(!inf)return;
+  const total=state.cart.reduce((a,c)=>a+c.qty,0);
+  if(!inf.limit){$('limit-label').textContent='פריטים שנבחרו:';$('limit-nums').textContent=total;$('limit-fill').style.width='0%';}
+  else{
+    const pct=Math.min(100,Math.round(total/inf.limit*100));
+    $('limit-label').textContent='מכסה:';$('limit-nums').textContent=`${total} / ${inf.limit}`;
+    $('limit-fill').style.width=pct+'%';$('limit-fill').style.background=pct>=100?'#A32D2D':'var(--pink)';
+  }
+}
+
+function renderCartItems(){
+  const list=$('cart-items-list');
+  if(!state.cart.length){list.innerHTML='<div class="cart-empty">הסל ריק</div>';return;}
+  list.innerHTML=state.cart.map((c,i)=>`
+    <div class="cart-item">
+      <img class="cart-item-img" src="${c.dataUrl}" alt="${c.name}"/>
+      <div style="flex:1">
+        <div class="cart-item-name">${c.name}</div>
+        <div class="cart-item-detail">מידה: ${c.size} · כמות: ${c.qty}</div>
+      </div>
+      <button class="cart-item-remove" onclick="removeItem(${i})">×</button>
+    </div>`).join('');
+}
+
+function removeItem(i){
+  const pi=state.cart[i].pi;
+  state.cart.splice(i,1);
+  updateCartUI();refreshCard(pi);
+}
+
+function toggleCart(){$('cart-overlay').classList.toggle('hidden');}
+function closeCartOutside(e){if(e.target===$('cart-overlay'))toggleCart();}
+
+function submitOrder(){
+  const inf=state.currentUser;
+  if(!state.cart.length)return;
+  let drop=null;
+  try{drop=JSON.parse(localStorage.getItem(STORAGE_KEY));}catch(e){}
+  const notes=$('cart-notes').value;
+  const total=state.cart.reduce((a,c)=>a+c.qty,0);
+  const now=new Date();
+  const date=`${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  const order={id:Date.now(),infName:inf.name,dropLabel:drop?drop.label:'',date,total,notes,status:'pending',
+    items:state.cart.map(c=>({name:c.name,size:c.size,qty:c.qty,dataUrl:c.dataUrl}))};
+  const orders=getOrders();orders.unshift(order);saveOrders(orders);
+  inf.submitted=true;state.cart=[];
+  $('cart-overlay').classList.add('hidden');
+  $('products-grid').classList.add('hidden');
+  $('success-screen').classList.remove('hidden');
+  $('success-msg').innerHTML=`הבחירות נשמרו ומחכות לאישור המנהלת.<br/>תודה ${inf.name}! 💕`;
+}
+
+$('auth-user').addEventListener('keydown',e=>e.key==='Enter'&&$('auth-pass').focus());
+$('auth-pass').addEventListener('keydown',e=>e.key==='Enter'&&doLogin());
+</script>
+</body>
+</html>
