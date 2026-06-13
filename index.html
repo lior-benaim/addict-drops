@@ -510,22 +510,6 @@ function compressImage(file){
 }
 
 function extractName(dataUrl){ return Promise.resolve(null); }
-  try{
-    const base64=dataUrl.split(',')[1];
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',max_tokens:60,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64}},
-          {type:'text',text:'מה שם המוצר הכתוב על התמונה? החזר רק את השם בעברית, ללא שום דבר אחר. לדוגמה: "מכנסי מולאן שחורים"'}
-        ]}]
-      })
-    });
-    const d=await res.json();
-    const name=d.content?.[0]?.text?.trim().replace(/^["״]|["״]$/g,'');
-    return name&&name.length>1&&name.length<60?name:null;
-  }catch(e){return null;}
 }
 
 const uploadZone=$('upload-zone');
