@@ -24,12 +24,16 @@ module.exports = async (req, res) => {
   const validToken = makeToken(validPass);
 
   if (!token || token !== validToken) {
+    // Not authenticated - redirect to login
     res.setHeader('Location', '/');
     return res.status(302).end();
   }
 
+  // Serve app.html with no-cache headers so refresh always hits server
   const appPath = path.join(process.cwd(), 'app.html');
   const html = fs.readFileSync(appPath, 'utf8');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
   return res.status(200).send(html);
 };
