@@ -1,5 +1,4 @@
 {
-  "rewrites": [],
   "routes": [
     { "src": "/api/auth", "dest": "/api/auth.js" },
     { "src": "/api/logout", "dest": "/api/logout.js" },
