@@ -1,17 +1,14 @@
-const { serialize } = require('cookie');
 const crypto = require('crypto');
 
-const SECRET = process.env.password + '_addict_secret_2026';
-
-function makeToken() {
-  return crypto.createHmac('sha256', SECRET)
+function makeToken(pass) {
+  return crypto.createHmac('sha256', pass + '_addict_2026')
     .update('addict_authenticated')
     .digest('hex');
 }
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).end('Method not allowed');
   }
 
   let body = '';
@@ -22,27 +19,21 @@ module.exports = async (req, res) => {
 
   let data;
   try { data = JSON.parse(body); }
-  catch { return res.status(400).json({ error: 'Invalid request' }); }
+  catch { return res.status(400).end('Invalid request'); }
 
   const { username, password } = data;
-
-  const validUser = process.env.user_name;
-  const validPass = process.env.password;
+  const validUser = (process.env.user_name || '').trim().toUpperCase();
+  const validPass = (process.env.password || '').trim();
 
   if (
     username && password &&
-    username.trim().toUpperCase() === validUser.trim().toUpperCase() &&
-    password === validPass
+    username.trim().toUpperCase() === validUser &&
+    password.trim() === validPass
   ) {
-    const token = makeToken();
-    const cookie = serialize('addict_auth', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: '/'
-    });
-    res.setHeader('Set-Cookie', cookie);
+    const token = makeToken(validPass);
+    res.setHeader('Set-Cookie',
+      `addict_auth=${token}; HttpOnly; Secure; SameSite=Strict; Max-Age=${60*60*24*30}; Path=/`
+    );
     return res.status(200).json({ ok: true });
   }
 
