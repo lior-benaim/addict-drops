@@ -1,29 +1,35 @@
-const { parse } = require('cookie');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const SECRET = process.env.password + '_addict_secret_2026';
-
-function makeToken() {
-  return crypto.createHmac('sha256', SECRET)
+function makeToken(pass) {
+  return crypto.createHmac('sha256', pass + '_addict_2026')
     .update('addict_authenticated')
     .digest('hex');
 }
 
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  (cookieHeader || '').split(';').forEach(part => {
+    const [k, ...v] = part.trim().split('=');
+    if (k) cookies[k.trim()] = v.join('=').trim();
+  });
+  return cookies;
+}
+
 module.exports = async (req, res) => {
-  const cookies = parse(req.headers.cookie || '');
+  const cookies = parseCookies(req.headers.cookie);
   const token = cookies['addict_auth'];
-  const validToken = makeToken();
+  const validPass = (process.env.password || '').trim();
+  const validToken = makeToken(validPass);
 
   if (!token || token !== validToken) {
     res.setHeader('Location', '/');
     return res.status(302).end();
   }
 
-  // Serve app.html
   const appPath = path.join(process.cwd(), 'app.html');
   const html = fs.readFileSync(appPath, 'utf8');
-  res.setHeader('Content-Type', 'text/html');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
   return res.status(200).send(html);
 };
