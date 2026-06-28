@@ -1,14 +1,7 @@
-const { serialize } = require('cookie');
-
 module.exports = (req, res) => {
-  const cookie = serialize('addict_auth', '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    maxAge: 0,
-    path: '/'
-  });
-  res.setHeader('Set-Cookie', cookie);
+  res.setHeader('Set-Cookie',
+    'addict_auth=; HttpOnly; Secure; SameSite=Strict; Max-Age=0; Path=/'
+  );
   res.setHeader('Location', '/');
   return res.status(302).end();
 };
