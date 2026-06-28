@@ -4,6 +4,6 @@
     { "src": "/api/logout", "dest": "/api/logout.js" },
     { "src": "/api/check", "dest": "/api/check.js" },
     { "src": "/app", "dest": "/api/guard.js" },
-    { "src": "/", "dest": "/login.html" }
+    { "src": "/(.*)", "dest": "/api/login-page.js" }
   ]
 }
