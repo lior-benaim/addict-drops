@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Addict Boxes — כניסה</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1a1a1a;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-box{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center}
+.login-logo{font-size:44px;margin-bottom:8px}
+.login-title{font-size:22px;font-weight:800;color:#1a1a1a;margin-bottom:4px}
+.login-sub{font-size:13px;color:#aaa;margin-bottom:24px}
+.login-field{width:100%;border:1.5px solid #ddd;border-radius:10px;padding:11px 14px;font-size:15px;outline:none;background:#fafafa;color:#222;margin-bottom:12px;text-align:right}
+.login-field:focus{border-color:#1a1a1a;background:#fff}
+.login-btn{width:100%;background:#1a1a1a;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+.login-btn:hover{background:#333}
+.login-btn:disabled{background:#999;cursor:not-allowed}
+.login-error{color:#dc2626;font-size:13px;margin-top:8px;min-height:18px}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="login-logo">📦</div>
+  <div class="login-title">Addict Boxes</div>
+  <div class="login-sub">Warehouse Management System</div>
+  <input class="login-field" id="login-user" type="text" placeholder="שם משתמש"
+    autocomplete="username"
+    onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+  <input class="login-field" id="login-pass" type="password" placeholder="סיסמה"
+    autocomplete="current-password"
+    onkeydown="if(event.key==='Enter')doLogin()">
+  <button class="login-btn" id="login-btn" onclick="doLogin()">כניסה</button>
+  <div class="login-error" id="login-error"></div>
+</div>
+<script>
+async function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error');
+  const btn=document.getElementById('login-btn');
+  if(!u||!p){err.textContent='נא למלא שם משתמש וסיסמה';return;}
+  btn.disabled=true;btn.textContent='...מתחבר';
+  try{
+    const res=await fetch('/api/auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p})
+    });
+    const data=await res.json();
+    if(res.ok&&data.ok){
+      window.location.href='/app';
+    } else {
+      err.textContent=data.error||'שם משתמש או סיסמה שגויים';
+      document.getElementById('login-pass').value='';
+      document.getElementById('login-pass').focus();
+    }
+  } catch(e){
+    err.textContent='שגיאת רשת — נסי שוב';
+  }
+  btn.disabled=false;btn.textContent='כניסה';
+}
+</script>
+</body>
+</html>

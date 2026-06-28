@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Addict Boxes Followup</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#222;min-height:100vh}
+.app{max-width:760px;margin:0 auto;padding:12px}
+
+/* LOGIN */
+.login-overlay{position:fixed;inset:0;background:#1a1a1a;display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-box{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center}
+.login-logo{font-size:44px;margin-bottom:8px}
+.login-title{font-size:22px;font-weight:800;color:#1a1a1a;margin-bottom:4px}
+.login-sub{font-size:13px;color:#aaa;margin-bottom:24px}
+.login-field{width:100%;border:1.5px solid #ddd;border-radius:10px;padding:11px 14px;font-size:15px;outline:none;background:#fafafa;color:#222;margin-bottom:12px;text-align:left}
+.login-field:focus{border-color:#1a1a1a;background:#fff}
+.login-btn{width:100%;background:#1a1a1a;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+.login-btn:hover{background:#333}
+.login-error{color:#dc2626;font-size:13px;margin-top:8px;min-height:18px}
+
+/* PREFIX POPUP */
+.prefix-popup-wrap{position:relative;display:inline-flex;align-items:center}
+.prefix-badge{position:absolute;top:-6px;right:-8px;background:#f59e0b;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.prefix-popup{display:none;position:absolute;top:28px;left:0;background:#fff;border:1.5px solid #e8e8e8;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:12px 14px;min-width:220px;z-index:200}
+.prefix-popup.open{display:block}
+.prefix-popup-title{font-size:11px;font-weight:700;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.prefix-popup-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5f5f5;gap:8px}
+.prefix-popup-row:last-child{border-bottom:none}
+.prefix-popup-name{font-weight:700;font-size:13px;color:#1a1a1a}
+.prefix-popup-range{font-size:12px;color:#888}
+.prefix-popup-btn-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;padding-top:8px;border-top:1px solid #f0f0f0}
+
+/* HEADER */
+.header{background:#1a1a1a;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.header-title{font-size:17px;font-weight:700;color:#fff;white-space:nowrap}
+.header-btns{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn-upload{background:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;color:#1a1a1a;font-weight:600;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-upload:hover{background:#e8e8e8}
+.btn-locations{background:#f59e0b;border:none;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;color:#fff;font-weight:600;display:inline-flex;align-items:center;gap:5px;position:relative;white-space:nowrap}
+.btn-locations:hover{background:#d97706}
+.btn-locations .badge{background:#ef4444;color:#fff;border-radius:10px;padding:1px 5px;font-size:10px;font-weight:700;position:absolute;top:-5px;right:-5px}
+.btn-drops{background:#7c3aed;border:none;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;color:#fff;font-weight:600;display:none;align-items:center;gap:5px;white-space:nowrap}
+.btn-drops:hover{background:#6d28d9}
+
+/* SHIPMENT SELECTOR */
+.shipment-bar{background:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.07);display:flex;align-items:center;gap:10px}
+.shipment-label{font-size:12px;color:#888;white-space:nowrap;font-weight:500}
+.shipment-select{flex:1;border:1.5px solid #ddd;border-radius:8px;padding:7px 10px;font-size:14px;outline:none;background:#fafafa;color:#222;cursor:pointer;min-width:0}
+.shipment-select:focus{border-color:#888}
+.btn-delete-ship{background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;color:#dc2626;white-space:nowrap}
+.btn-delete-ship:hover{background:#fee2e2}
+
+/* STATS */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat-card{background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 1px 3px rgba(0,0,0,0.07)}
+.stat-label{font-size:10px;color:#888;margin-bottom:3px}
+.stat-value{font-size:19px;font-weight:700;color:#1a1a1a;line-height:1.2}
+.stat-sub{font-size:11px;color:#aaa;font-weight:400}
+.stat-card.green .stat-value{color:#1e7e34}
+.stat-card.progress-card{position:relative;overflow:hidden}
+.stat-progress-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:#e0e0e0}
+.stat-progress-fill{height:100%;background:#4caf50;transition:width .4s}
+
+/* SEARCH */
+.search-section{background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.07)}
+.search-row{display:flex;gap:6px;align-items:center}
+.mode-btns{display:flex;gap:4px;flex-shrink:0}
+.mode-btn{padding:6px 12px;font-size:13px;border:1px solid #ddd;border-radius:7px;cursor:pointer;background:#f5f5f5;color:#555;font-weight:500}
+.mode-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.search-input{flex:1;border:1px solid #ddd;border-radius:8px;padding:7px 12px;font-size:14px;outline:none;background:#fafafa;color:#222;min-width:0}
+.search-input:focus{border-color:#888;background:#fff}
+.clear-btn{background:none;border:none;cursor:pointer;color:#aaa;font-size:17px;padding:0 3px;line-height:1;flex-shrink:0}
+
+/* LIST HEADER */
+.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 2px;flex-wrap:wrap;gap:6px}
+.list-count{font-size:13px;color:#888}
+.list-actions{display:flex;gap:6px}
+.btn-small{background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;color:#555;white-space:nowrap}
+.btn-small:hover{background:#f0f0f0}
+
+/* CTN CARDS */
+.ctn-card{background:#fff;border-radius:10px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.07);overflow:hidden;border:1.5px solid #e8e8e8}
+.ctn-card.opened{border-color:#81c784;background:#fafffe}
+.ctn-card.multi-style{border-color:#ef4444;background:#fef2f2}
+.ctn-card.multi-style.opened{border-color:#ef4444;background:#fef7f7}
+.ctn-header{display:flex;align-items:center;padding:10px 12px;gap:8px;cursor:pointer;user-select:none}
+.ctn-header:hover{background:rgba(0,0,0,.02)}
+.check-btn{width:26px;height:26px;border-radius:6px;border:2px solid #ccc;background:#f5f5f5;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:14px}
+.check-btn.checked{background:#e8f5e9;border-color:#4caf50;color:#2e7d32}
+.ctn-number{font-weight:700;font-size:14px;flex-shrink:0;min-width:70px}
+.ctn-style-name{flex:1;font-size:12px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge-open{font-size:10px;color:#2e7d32;background:#e8f5e9;border-radius:4px;padding:2px 6px;font-weight:600;flex-shrink:0}
+.ctn-meta{font-size:11px;color:#aaa;flex-shrink:0}
+.chevron{font-size:10px;color:#ccc;flex-shrink:0;transition:transform .2s}
+.chevron.open{transform:rotate(180deg)}
+.ctn-body{border-top:1px solid #f0f0f0;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:280px}
+th{text-align:left;padding:6px 12px;font-weight:600;color:#666;background:#f8f8f8;border-bottom:1px solid #eee;font-size:11px}
+td{padding:7px 12px;border-bottom:1px solid #f5f5f5;vertical-align:top}
+tr:last-child td{border-bottom:none}
+.item-code{font-weight:700;font-size:12px;color:#1a1a1a}
+.item-sname{font-size:11px;color:#888;margin-top:1px}
+.sizes-cell{font-size:10px;color:#888;line-height:1.5}
+.qty-cell{font-weight:700;color:#1a1a1a}
+
+/* ITEM CARDS */
+.item-card{background:#fff;border-radius:10px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.07);overflow:hidden;border:1.5px solid #e8e8e8}
+.item-header{display:flex;align-items:center;padding:10px 12px;gap:8px;cursor:pointer;flex-wrap:wrap}
+.item-header:hover{background:rgba(0,0,0,.02)}
+.item-title{font-weight:700;font-size:15px}
+.item-sub{font-size:12px;color:#888}
+.item-actions{display:flex;gap:6px;padding:8px 12px;border-top:1px solid #f0f0f0;flex-wrap:wrap}
+.btn-mark-all{background:#1a1a1a;color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:600}
+.btn-mark-all:hover{background:#333}
+.btn-done{background:#16a34a;color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:600}
+.btn-done:hover{background:#15803d}
+.ctn-chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-top:1px solid #f0f0f0}
+.ctn-chip{display:flex;align-items:center;gap:5px;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:7px;padding:5px 9px}
+.ctn-chip.opened{background:#e8f5e9;border-color:#81c784}
+.ctn-chip.multi-style{background:#fef2f2;border-color:#ef4444}
+.ctn-chip.multi-style.opened{background:#fef7f7;border-color:#ef4444}
+.chip-multi-icon{font-size:10px;color:#ef4444}
+.chip-check{width:18px;height:18px;border-radius:3px;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;background:#fff;flex-shrink:0}
+.chip-check.checked{background:#e8f5e9;border-color:#4caf50;color:#2e7d32}
+.chip-name{font-size:12px;font-weight:700}
+.chip-color{font-size:11px;color:#888}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:50px 20px;color:#bbb}
+.empty-icon{font-size:48px;margin-bottom:10px}
+.empty-title{font-size:15px;font-weight:600;color:#888;margin-bottom:5px}
+.empty-sub{font-size:13px}
+.no-results{text-align:center;padding:24px;color:#aaa;font-size:14px}
+
+/* NOTIFICATION */
+.notification{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:999;padding:10px 20px;border-radius:9px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none;max-width:90vw;text-align:center}
+.notif-success{background:#e8f5e9;color:#1e7e34;border:1px solid #81c784}
+.notif-error{background:#fce8e8;color:#b71c1c;border:1px solid #f5a5a5}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
+
+/* LOCATIONS PAGE */
+.loc-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.btn-back{background:#fff;border:1px solid #ddd;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;color:#555;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-back:hover{background:#f0f0f0}
+.loc-title{font-size:17px;font-weight:700}
+.loc-subtitle{font-size:12px;color:#888;margin-top:2px}
+.loc-card{background:#fff;border-radius:10px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.07);border:1.5px solid #e8e8e8;overflow:hidden}
+.loc-card-header{display:flex;align-items:center;padding:10px 14px;gap:10px;background:#fafff8;border-bottom:1px solid #f0f0f0;flex-wrap:wrap}
+.loc-item-code{font-weight:700;font-size:14px}
+.loc-item-name{font-size:11px;color:#888;margin-top:1px}
+.loc-badge-done{background:#e8f5e9;color:#1e7e34;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700;flex-shrink:0}
+.loc-ctns{font-size:12px;color:#aaa}
+.loc-locations{padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.loc-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.loc-row-label{font-size:12px;color:#666;min-width:70px;flex-shrink:0}
+.loc-input{flex:1;border:1.5px solid #ddd;border-radius:8px;padding:7px 10px;font-size:13px;outline:none;background:#fafafa;color:#222;min-width:100px}
+.loc-input:focus{border-color:#4caf50;background:#fff}
+.loc-input.saved{border-color:#4caf50;background:#f0fdf4}
+.loc-save-btn{background:#1a1a1a;color:#fff;border:none;border-radius:7px;padding:7px 12px;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap}
+.loc-save-btn:hover{background:#333}
+.loc-add-btn{background:none;border:1px dashed #ccc;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;color:#888;margin-top:4px;align-self:flex-start}
+.loc-add-btn:hover{border-color:#888;color:#555}
+.loc-empty{text-align:center;padding:40px 20px;color:#bbb}
+.loc-empty-icon{font-size:44px;margin-bottom:10px}
+.loc-empty-title{font-size:14px;font-weight:600;color:#888;margin-bottom:5px}
+.loc-empty-sub{font-size:12px}
+
+/* DROP DATE */
+.drop-date-row{display:flex;align-items:center;gap:8px;padding:6px 14px 10px;flex-wrap:wrap;border-top:1px solid #f0f0f0;background:#fafafa}
+.drop-date-label{font-size:12px;color:#666;font-weight:600;white-space:nowrap}
+.drop-date-input{border:1.5px solid #ddd;border-radius:8px;padding:6px 10px;font-size:13px;outline:none;background:#fff;color:#222;cursor:pointer}
+.drop-date-input:focus{border-color:#7c3aed}
+.drop-date-input.saved{border-color:#7c3aed;background:#f5f3ff}
+.drop-date-save-btn{background:#7c3aed;color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap}
+.drop-date-save-btn:hover{background:#6d28d9}
+
+/* DROP IMAGE */
+.drop-img-section{padding:10px 16px;border-top:1px solid #f0f0f0;background:#fafafa}
+.drop-img-preview{width:100%;max-height:200px;object-fit:contain;border-radius:8px;border:1px solid #e0e0e0;margin-bottom:8px;display:block}
+.drop-img-btns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn-upload-img{background:#7c3aed;color:#fff;border:none;border-radius:7px;padding:7px 12px;font-size:12px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.btn-upload-img:hover{background:#6d28d9}
+.btn-remove-img{background:#fef2f2;border:1px solid #fca5a5;border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;color:#dc2626}
+.drop-img-saved{font-size:11px;color:#16a34a;font-weight:600}
+
+/* DROPS PAGE */
+.drops-date-card{background:#fff;border-radius:10px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.07);border:1.5px solid #e8e8e8;overflow:hidden}
+.drops-date-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none}
+.drops-date-header:hover{background:rgba(0,0,0,.02)}
+.drops-date-title{font-size:16px;font-weight:700;color:#7c3aed}
+.drops-date-count{font-size:12px;color:#888}
+.drops-date-body{border-top:1px solid #f0f0f0;padding:10px 0}
+.drops-section-title{font-size:11px;font-weight:700;color:#aaa;padding:6px 16px 4px;text-transform:uppercase;letter-spacing:.5px}
+.drops-item-row{display:flex;align-items:center;padding:7px 16px;border-bottom:1px solid #f5f5f5;gap:10px;flex-wrap:wrap}
+.drops-item-row:last-child{border-bottom:none}
+.drops-item-code{font-weight:700;font-size:13px;color:#1a1a1a;min-width:80px}
+.drops-item-name{font-size:12px;color:#666;flex:1}
+.drops-item-colors{font-size:11px;color:#aaa}
+
+/* MOBILE */
+/* CONFIRM BAR */
+.confirm-bar{background:#1a1a1a;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;justify-content:space-between;gap:10px}
+.confirm-bar.visible{display:flex}
+.confirm-text{color:#fff;font-size:13px;font-weight:500}
+.confirm-text span{color:#4caf50;font-weight:700}
+.confirm-btns{display:flex;gap:8px}
+.btn-confirm{background:#4caf50;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:700}
+.btn-confirm:hover{background:#388e3c}
+.btn-cancel-confirm{background:transparent;color:#aaa;border:1px solid #444;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer}
+.btn-cancel-confirm:hover{background:#333;color:#fff}
+
+/* STATS PANEL */
+.stats-panel{background:#fff;border-radius:10px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.07);overflow:hidden;border:1.5px solid #e8e8e8;display:none}
+.stats-panel.open{display:block}
+.stats-panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f0f0f0;background:#f8f8f8}
+.stats-panel-title{font-size:13px;font-weight:700;color:#333}
+.stats-panel-close{background:none;border:none;cursor:pointer;color:#aaa;font-size:18px;line-height:1}
+.variant-row{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #f5f5f5;gap:10px;flex-wrap:wrap}
+.variant-row:last-child{border-bottom:none}
+.variant-name{font-weight:600;font-size:13px;flex-shrink:0}
+.variant-color{font-size:12px;color:#666;flex:1;min-width:60px}
+.variant-code{font-size:11px;color:#aaa;flex-shrink:0;direction:ltr}
+.variant-qty{font-weight:700;font-size:13px;color:#1a1a1a;flex-shrink:0;min-width:50px;text-align:right}
+
+/* HAS LOCATIONS BADGE */
+.badge-has-loc{font-size:10px;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:4px;padding:2px 6px;font-weight:600;flex-shrink:0;white-space:nowrap}
+.item-has-loc{background:#fffbeb !important;border-color:#fcd34d !important}
+tr.has-loc-row td{background:#fffde7}
+tr.has-loc-row td:first-child::after{content:' 📍';font-size:11px}
+
+/* MULTI-STYLE WARNING BADGE */
+.badge-multi-style{font-size:10px;color:#fff;background:#ef4444;border-radius:4px;padding:2px 6px;font-weight:700;flex-shrink:0;white-space:nowrap}
+
+/* ALL SHIPMENTS RESULTS */
+.all-ship-badge{font-size:10px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:2px 6px;font-weight:600;flex-shrink:0}
+.location-banner{background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:13px;color:#92400e;display:flex;align-items:center;gap:6px}
+
+/* EXPORT BUTTON */
+.btn-export{background:#16a34a;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-export:hover{background:#15803d}
+
+/* SCROLL TO TOP */
+.scroll-top{position:fixed;bottom:20px;right:20px;width:44px;height:44px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;cursor:pointer;font-size:20px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.25);z-index:998;transition:opacity .2s}
+.scroll-top.visible{display:flex}
+.scroll-top:hover{background:#333}
+
+/* SCROLL TO BOTTOM */
+.scroll-bottom{position:fixed;bottom:20px;right:74px;width:44px;height:44px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;cursor:pointer;font-size:20px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.25);z-index:998;transition:opacity .2s}
+.scroll-bottom.visible{display:flex}
+.scroll-bottom:hover{background:#333}
+
+/* MULTI-STYLE FILTER TOGGLE */
+.filter-multi-btn{padding:6px 12px;font-size:13px;border:1px solid #fca5a5;border-radius:7px;cursor:pointer;background:#fef2f2;color:#dc2626;font-weight:500;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;margin-left:auto}
+.filter-multi-btn.active{background:#ef4444;border-color:#ef4444;color:#fff}
+
+@media(max-width:520px){
+  .stats-bar{grid-template-columns:repeat(2,1fr)}
+  .stat-value{font-size:17px}
+  th:nth-child(3),td:nth-child(3){display:none}
+  .header-title{font-size:15px}
+  .shipment-bar{flex-wrap:wrap}
+  .loc-header{gap:8px}
+  .loc-card-header{gap:6px}
+  .loc-row{gap:6px}
+  .filter-multi-btn{margin-left:0}
+}
+@media(max-width:360px){
+  .app{padding:8px}
+  .ctn-number{min-width:60px;font-size:13px}
+}
+</style>
+</head>
+<body>
+<div id="page-main" class="page active">
+<div class="app">
+
+  <div class="header">
+    <div class="header-title" style="display:flex;align-items:center;gap:8px">
+      <div class="prefix-popup-wrap" id="prefix-popup-wrap" style="display:none">
+        <span style="font-size:20px;cursor:pointer" onclick="togglePrefixPopup(event)">📦</span>
+        <span class="prefix-badge" id="prefix-badge" onclick="togglePrefixPopup(event)">!</span>
+        <div class="prefix-popup" id="prefix-popup">
+          <div class="prefix-popup-title">קבוצות קרטונים</div>
+          <div id="prefix-popup-rows"></div>
+          <div class="prefix-popup-btn-row" id="prefix-popup-btns"></div>
+        </div>
+      </div>
+      <span style="font-size:20px" id="header-icon-simple">📦</span>
+      Addict Boxes Followup
+    </div>
+    <div class="header-btns">
+      <button class="btn-locations" id="btn-locations" onclick="showLocations()" style="display:none">
+        📍 Storage Locations
+        <span class="badge" id="locations-badge">0</span>
+      </button>
+      <button class="btn-drops" id="btn-drops" onclick="showDrops()">📅 Drops</button>
+      <button class="btn-export" id="btn-export-main" onclick="exportCurrentView()" style="display:none">📥 Export</button>
+      <button class="btn-upload" onclick="document.getElementById('file-input').click()">⬆ Upload PL</button>
+      <button class="btn-upload" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5" onclick="window.location.href='/api/logout'">🚪 יציאה</button>
+      <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="handleFile(event)">
+    </div>
+  </div>
+
+  <!-- SHIPMENT SELECTOR -->
+  <div id="shipment-bar" class="shipment-bar" style="display:none">
+    <span class="shipment-label">📋 Shipment:</span>
+    <select class="shipment-select" id="shipment-select" onchange="setShipment(this.value)"></select>
+    <button class="btn-delete-ship" onclick="deleteActiveShipment()">🗑 Delete</button>
+  </div>
+
+  <div id="stats-bar" class="stats-bar" style="display:none"></div>
+  <div id="stats-panel" class="stats-panel">
+    <div class="stats-panel-header">
+      <span class="stats-panel-title" id="stats-panel-title"></span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-export" id="stats-panel-export-btn" style="padding:5px 10px;font-size:12px" onclick="exportStatsPanel()">📥 Export</button>
+        <button class="stats-panel-close" onclick="closeStatsPanel()">✕</button>
+      </div>
+    </div>
+    <div id="stats-panel-list"></div>
+  </div>
+
+  <div id="search-section" class="search-section" style="display:none">
+    <div class="search-row">
+      <div class="mode-btns">
+        <button class="mode-btn active" id="mode-ctn" onclick="setMode('ctn')">Carton</button>
+        <button class="mode-btn" id="mode-item" onclick="setMode('item')">Style</button>
+      </div>
+      <input class="search-input" id="search-input" type="text"
+        placeholder="Search carton number... (ACB-001)"
+        oninput="onSearch(this.value)">
+      <button class="clear-btn" id="clear-btn" onclick="clearSearch()" style="display:none">✕</button>
+    </div>
+    <div style="margin-top:7px;display:flex;gap:6px;align-items:center" id="search-all-row" style="display:none">
+      <button class="mode-btn" id="btn-search-all" onclick="searchAllShipments()" style="font-size:12px;padding:5px 10px;background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8">🔍 Search All Shipments</button>
+      <span id="search-all-status" style="font-size:11px;color:#888"></span>
+    </div>
+    <div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:4px" class="mode-btns">
+      <button class="mode-btn active" id="filter-all" onclick="setCategoryFilter('all')">All</button>
+      <button class="mode-btn" id="filter-women" onclick="setCategoryFilter('women')">👩 Women</button>
+      <button class="mode-btn" id="filter-kids" onclick="setCategoryFilter('kids')">👧 Kids</button>
+      <button class="filter-multi-btn" id="filter-multi-style" onclick="toggleMultiStyleFilter()">⚠ Multi-Style Only</button>
+    </div>
+  </div>
+
+  <div class="confirm-bar" id="confirm-bar">
+    <span class="confirm-text">✓ <span id="confirm-count">0</span> cartons selected — move to bottom?</span>
+    <div class="confirm-btns">
+      <button class="btn-cancel-confirm" onclick="cancelConfirm()">Cancel</button>
+      <button class="btn-confirm" onclick="applyConfirm()">✓ Confirm</button>
+    </div>
+  </div>
+
+  <div id="list-header" style="display:none">
+    <div class="list-header">
+      <span class="list-count" id="list-count"></span>
+      <div class="list-actions">
+        <button class="btn-small" onclick="markAll(true)">Mark All ✓</button>
+        <button class="btn-small" onclick="markAll(false)">Reset All</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-list"></div>
+</div>
+</div>
+
+<!-- LOCATIONS PAGE -->
+<div id="page-locations" class="page">
+<div class="app">
+  <div class="loc-header">
+    <button class="btn-back" onclick="showMain()">← Back</button>
+    <div style="flex:1">
+      <div class="loc-title">📍 Storage Locations</div>
+      <div class="loc-subtitle" id="loc-subtitle"></div>
+    </div>
+    <button class="btn-export" onclick="exportLocations()">📥 Export</button>
+  </div>
+  <div style="background:#fff;border-radius:10px;padding:8px 12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.07);display:flex;gap:8px;align-items:center">
+    <input id="loc-search-input" class="search-input" type="text" placeholder="חיפוש לפי קוד, שם אנגלי או עברית..." oninput="renderLocations()" style="flex:1">
+    <button onclick="document.getElementById('loc-search-input').value='';renderLocations()" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:17px">✕</button>
+  </div>
+  <div id="locations-list"></div>
+</div>
+</div>
+
+<!-- DROPS PAGE -->
+<div id="page-drops" class="page">
+<div class="app">
+  <div class="loc-header">
+    <button class="btn-back" onclick="showMain()">← Back</button>
+    <div style="flex:1">
+      <div class="loc-title">📅 Drops</div>
+      <div class="loc-subtitle" id="drops-subtitle"></div>
+    </div>
+    <button class="btn-drops" style="display:inline-flex" onclick="toggleDropAddPanel()">➕ הוסף לדרופ</button>
+    <button class="btn-export" onclick="exportDrops()">📥 Export</button>
+  </div>
+  <div id="drop-add-panel"></div>
+  <div id="drops-list"></div>
+</div>
+</div>
+
+<div id="notification" class="notification"></div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyBbrxhivm9R8o2nzmDXRYADsbcoHKnwvOg",authDomain:"boxes-followup.firebaseapp.com",databaseURL:"https://boxes-followup-default-rtdb.firebaseio.com",projectId:"boxes-followup",storageBucket:"boxes-followup.firebasestorage.app",messagingSenderId:"8665305254",appId:"1:8665305254:web:62a89ba2933768bc736467"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+const auth=firebase.auth();
+
+let shipments={},openedCtns={},locations={},completedItems={},pendingOpened={};
+let activeShipment=null,searchMode='ctn',searchQuery='',expandedCards={},categoryFilter='all',multiStyleFilter=false;
+let allEntriesByCtn={};
+let dropDates={};
+let dropDateList={};  // drop dates that exist even with no items yet (key=date)
+let dropsExpanded={};
+let dropImages={};  // itemCode -> base64 image
+let dropAddPanelOpen=false, dropAddDate='', dropAddSearch='';  // "+" add-to-drop panel state
+let dropCardAddOpen=null, dropCardAddSearch='';  // inline "add item" inside an open drop card
+let prefixFilter='';  // filter cartons by prefix e.g. "ACE"
+
+function notify(msg,type='success'){
+  const el=document.getElementById('notification');
+  el.textContent=msg;el.className='notification '+(type==='error'?'notif-error':'notif-success');
+  el.style.display='block';setTimeout(()=>el.style.display='none',2800);
+}
+
+function parseFloat2(v){const n=parseFloat(v);return isNaN(n)?0:n;}
+
+function parsePL(workbook){
+  const sheet=workbook.Sheets[workbook.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:null});
+  let headerRow=-1;
+  for(let i=0;i<rows.length;i++){
+    if(rows[i]&&rows[i].some(c=>typeof c==='string'&&c.toLowerCase().includes('item no'))){headerRow=i;break;}
+  }
+  if(headerRow===-1)return null;
+  const headers=rows[headerRow].map(h=>h?String(h).trim():'');
+  const colIdx=name=>headers.findIndex(h=>h.toLowerCase().includes(name.toLowerCase()));
+  const itemCol=colIdx('item no'),styleNameCol=colIdx('style name'),colorCol=colIdx('color'),ctnCol=colIdx('CTN'),qtyCol=colIdx('Total Qty');
+  if(itemCol===-1||ctnCol===-1)return null;
+  const sizeHeaders=[];
+  headers.forEach((h,i)=>{
+    const clean=h.split('\n')[0].trim();
+    const skip=['style','item no','color','ctn','total','gross','cbm','unit','pic','hs','desc','ship','supplier','israel','factory'];
+    if(clean&&!skip.some(s=>clean.toLowerCase().includes(s))&&i>colorCol)sizeHeaders.push({label:clean,col:i});
+  });
+  const entries=[];let lastCTN=null,lastStyleName='';
+  for(let i=headerRow+1;i<rows.length;i++){
+    const row=rows[i];if(!row)continue;
+    const ctn=row[ctnCol]?String(row[ctnCol]).trim():null;
+    const item=row[itemCol]?String(row[itemCol]).trim():null;
+    const color=row[colorCol]?String(row[colorCol]).trim():null;
+    if(ctn&&ctn!=='CTN'&&!/^\d+$/.test(ctn))lastCTN=ctn;
+    if(!item||!lastCTN||item==='nan')continue;
+    if(item.toLowerCase()==='item no.'||item.toLowerCase()==='item no')continue;
+    const qty=qtyCol!==-1?parseFloat2(row[qtyCol]):0;
+    const rawStyle=styleNameCol!==-1&&row[styleNameCol]?String(row[styleNameCol]).trim():'';
+    if(rawStyle)lastStyleName=rawStyle;
+    const sizes={};
+    sizeHeaders.forEach(({label,col})=>{const v=parseFloat2(row[col]);if(v>0)sizes[label]=v;});
+    entries.push({ctn:lastCTN,item,styleName:lastStyleName||'',color:color||'',qty,sizes});
+  }
+  return entries;
+}
+
+function groupByCTN(entries){const map={};entries.forEach(e=>{if(!map[e.ctn])map[e.ctn]=[];map[e.ctn].push(e);});return map;}
+function groupByItem(entries){
+  const map={};
+  entries.forEach(e=>{
+    if(!map[e.item])map[e.item]={item:e.item,styleName:e.styleName,ctns:new Set(),entries:[]};
+    map[e.item].ctns.add(e.ctn);map[e.item].entries.push(e);
+  });
+  return map;
+}
+
+function isMultiStyleCarton(items){
+  return new Set(items.map(i=>i.item)).size>1;
+}
+
+function getCompletedItems(){
+  // Returns completed items from active shipment only (for Storage Locations page)
+  const entries=getCurrentEntries();
+  const itemMap=groupByItem(entries);
+  return Object.entries(itemMap).filter(([item,data])=>{
+    if(completedItems[item.replace(/[.#$\/\[\]]/g,'-')])return true;
+    const ctns=[...data.ctns];
+    return ctns.length>0&&ctns.every(c=>openedCtns[c]);
+  });
+}
+
+function getAllCompletedItems(){
+  // Returns completed items from ALL shipments, with shipment name attached
+  // Used for Drops page so items from any shipment can appear
+  const result=[];
+  const seen=new Set();
+  Object.entries(shipments).forEach(([shipId,ship])=>{
+    const entries=ship.entries||[];
+    const itemMap=groupByItem(entries);
+    Object.entries(itemMap).forEach(([item,data])=>{
+      const key=item.replace(/[.#$\/\[\]]/g,'-');
+      const isDone=completedItems[key]||([...data.ctns].length>0&&[...data.ctns].every(c=>openedCtns[c]));
+      if(isDone&&!seen.has(item)){
+        seen.add(item);
+        result.push({item,data,shipName:ship.name,shipId});
+      }
+    });
+  });
+  return result;
+}
+
+function isStyleFullyLocated(item,data){
+  const key=fkey(item);
+  if(!locations[key])return false;
+  const colors=[...new Set((data.entries||[]).map(e=>e.color).filter(Boolean))];
+  if(colors.length===0)return false;
+  return colors.every(color=>{
+    const colorKey=key+'_'+fkey(color);
+    return locations[colorKey]&&locations[colorKey].trim&&locations[colorKey].trim()!==''||
+           (typeof locations[colorKey]==='string'&&locations[colorKey]!=='');
+  });
+}
+
+function getPendingLocationCount(){
+  // Styles that are completed but NOT yet fully located
+  const completed=getCompletedItems();
+  return completed.filter(([item,data])=>!isStyleFullyLocated(item,data)).length;
+}
+
+async function handleFile(e){
+  const file=e.target.files[0];if(!file)return;
+  try{
+    const ab=await file.arrayBuffer();
+    const wb=XLSX.read(ab,{type:'array'});
+    const entries=parsePL(wb);
+    if(!entries||entries.length===0){notify('Cannot read file — please check it is a valid PL','error');return;}
+    const id=Date.now().toString();
+    await db.ref('shipments/'+id).set({name:file.name.replace(/\.xlsx?$/i,''),date:new Date().toLocaleDateString('en-GB'),entries});
+    activeShipment=id;
+    notify('✓ Loaded '+entries.length+' rows from '+file.name);
+  }catch(err){notify('Error reading file','error');}
+  e.target.value='';
+}
+
+function toggleCTN(ctn){
+  // Toggle pending state (visual only until confirmed)
+  if(pendingOpened[ctn]){
+    delete pendingOpened[ctn];
+  } else if(!openedCtns[ctn]){
+    pendingOpened[ctn]=true;
+  } else {
+    // Already opened — allow unmark directly
+    db.ref('opened/'+ctn.replace(/[.#$\/\[\]]/g,'-')).set(null);
+    return;
+  }
+  updateConfirmBar();
+  render();
+}
+
+function updateConfirmBar(){
+  const bar=document.getElementById('confirm-bar');
+  const count=Object.keys(pendingOpened).length;
+  if(count>0){
+    bar.className='confirm-bar visible';
+    document.getElementById('confirm-count').textContent=count;
+  } else {
+    bar.className='confirm-bar';
+  }
+}
+
+function applyConfirm(){
+  const updates={};
+  Object.keys(pendingOpened).forEach(ctn=>{
+    updates['opened/'+ctn.replace(/[.#$\/\[\]]/g,'-')]=true;
+  });
+  db.ref().update(updates);
+  pendingOpened={};
+  updateConfirmBar();
+}
+
+function cancelConfirm(){
+  pendingOpened={};
+  updateConfirmBar();
+  render();
+}
+
+function markStyleCtns(item,ctnsArr,val){
+  const updates={};
+  ctnsArr.forEach(ctn=>{updates['opened/'+ctn.replace(/[.#$\/\[\]]/g,'-')]=val||null;});
+  db.ref().update(updates);
+}
+
+async function markStyleDone(item,ctnsArr){
+  markStyleCtns(item,ctnsArr,true);
+  const key=item.replace(/[.#$\/\[\]]/g,'-');
+  await db.ref('completedItems/'+key).set(true);
+  notify('✓ '+item+' marked as done — sent to Storage Locations!');
+}
+
+function deleteActiveShipment(){
+  if(!activeShipment)return;
+  if(!confirm('Delete this shipment?'))return;
+  db.ref('shipments/'+activeShipment).remove();
+}
+
+function fkey(s){return s.replace(/[.#$\/\[\]]/g,'-');}
+
+function onLocInput(itemCode,color){
+  const btnId='loc-btn-'+itemCode+'-'+color;
+  const btn=document.getElementById(btnId);
+  if(btn)btn.style.display='';
+  const inpId='loc-inp-'+itemCode+'-'+color;
+  const inp=document.getElementById(inpId);
+  if(inp)inp.className='loc-input';
+}
+
+async function saveColorLocation(itemCode,color){
+  const inp=document.getElementById('loc-inp-'+itemCode+'-'+color);
+  if(!inp)return;
+  const val=inp.value.trim();
+  const key=fkey(itemCode)+'_'+fkey(color);
+  await db.ref('locations/'+key).set(val||null);
+  inp.className='loc-input saved';
+  // Hide save button
+  const btn=document.getElementById('loc-btn-'+itemCode+'-'+color);
+  if(btn)btn.style.display='none';
+  notify('✓ Location saved for '+color);
+  // Badge will update via Firebase listener
+}
+
+function setMode(mode){
+  searchMode=mode;
+  document.getElementById('mode-ctn').className='mode-btn'+(mode==='ctn'?' active':'');
+  document.getElementById('mode-item').className='mode-btn'+(mode==='item'?' active':'');
+  document.getElementById('search-input').placeholder=mode==='ctn'?'Search carton number... (ACB-001)':'Search style code... (ADD0187)';
+  // Do NOT clear query - keep it
+  render();
+}
+
+function categoryMatch(itemCode){
+  if(categoryFilter==='kids')return itemCode.startsWith('LADD');
+  if(categoryFilter==='women')return itemCode.startsWith('ADD');
+  return true;
+}
+
+function setCategoryFilter(cat){
+  categoryFilter=cat;
+  document.getElementById('filter-all').className='mode-btn'+(cat==='all'?' active':'');
+  document.getElementById('filter-women').className='mode-btn'+(cat==='women'?' active':'');
+  document.getElementById('filter-kids').className='mode-btn'+(cat==='kids'?' active':'');
+  render();
+}
+
+function toggleMultiStyleFilter(){
+  multiStyleFilter=!multiStyleFilter;
+  document.getElementById('filter-multi-style').className='filter-multi-btn'+(multiStyleFilter?' active':'');
+  render();
+}
+
+function onSearch(v){
+  searchQuery=v;
+  document.getElementById('clear-btn').style.display=v?'block':'none';
+  render();
+  const inp=document.getElementById('search-input');
+  if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}
+}
+
+function clearSearch(){
+  searchQuery='';
+  const inp=document.getElementById('search-input');
+  if(inp)inp.value='';
+  document.getElementById('clear-btn').style.display='none';
+  render();
+  if(inp)inp.focus();
+}
+
+function toggleExpand(key){expandedCards[key]=!expandedCards[key];render();}
+
+function setShipment(id){
+  activeShipment=id;
+  render();
+}
+
+function markAll(val){
+  const entries=getCurrentEntries();
+  const ctnMap=groupByCTN(entries);
+  const updates={};
+  // Only mark visible/filtered cartons
+  let ctnsToMark=Object.keys(ctnMap);
+  if(searchQuery&&searchMode==='ctn') ctnsToMark=ctnsToMark.filter(c=>c.toLowerCase().includes(searchQuery.toLowerCase()));
+  if(categoryFilter!=='all') ctnsToMark=ctnsToMark.filter(c=>ctnMap[c].some(e=>categoryMatch(e.item)));
+  if(multiStyleFilter) ctnsToMark=ctnsToMark.filter(c=>isMultiStyleCarton(ctnMap[c]));
+  ctnsToMark.forEach(ctn=>{updates['opened/'+ctn.replace(/[.#$\/\[\]]/g,'-')]=val||null;});
+  db.ref().update(updates);
+}
+
+function deleteActiveShipment(){
+  if(!activeShipment||!confirm('Delete this shipment?'))return;
+  db.ref('shipments/'+activeShipment).remove();
+}
+
+function getCurrentEntries(){
+  if(!activeShipment||!shipments[activeShipment])return[];
+  return shipments[activeShipment].entries||[];
+}
+
+function showLocations(){
+  document.getElementById('page-main').className='page';
+  document.getElementById('page-drops').className='page';
+  document.getElementById('page-locations').className='page active';
+  renderLocations();
+}
+function showMain(){
+  document.getElementById('page-locations').className='page';
+  document.getElementById('page-drops').className='page';
+  document.getElementById('page-main').className='page active';
+}
+
+function renderLocations(){
+  let completed=getCompletedItems();
+  const locQ=(document.getElementById('loc-search-input')?.value||'').toLowerCase().trim();
+  if(locQ){
+    completed=completed.filter(([item,data])=>
+      item.toLowerCase().includes(locQ)||
+      (data.styleName&&data.styleName.toLowerCase().includes(locQ))
+    );
+  }
+  const el=document.getElementById('locations-list');
+  document.getElementById('loc-subtitle').textContent=completed.length+' styles completed';
+  if(completed.length===0){
+    el.innerHTML=`<div class="loc-empty">
+      <div class="loc-empty-icon">📦</div>
+      <div class="loc-empty-title">No completed styles yet</div>
+      <div class="loc-empty-sub">Mark all cartons of a style ✓ or press "Done" to send here</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML=completed.map(([item,data])=>{
+    const ctns=[...data.ctns].sort();
+    const key=fkey(item);
+    // Get unique colors for this style
+    const colors=[...new Set(data.entries.map(e=>e.color).filter(Boolean))].sort();
+    const colorRows=colors.map(color=>{
+      const colorKey=key+'_'+fkey(color);
+      const saved=locations[colorKey]||'';
+      const inputId=`loc-inp-${item}-${color}`;
+      const btnId=`loc-btn-${item}-${color}`;
+      return `<div class="loc-row">
+        <span class="loc-row-label" style="min-width:90px;font-weight:600">${color}:</span>
+        <input class="loc-input ${saved?'saved':''}" id="${inputId}" type="text"
+          placeholder="e.g. Shelf A3" value="${saved}"
+          oninput="onLocInput('${item}','${color}')"
+          onkeydown="if(event.key==='Enter')saveColorLocation('${item}','${color}')">
+        <button class="loc-save-btn" id="${btnId}" onclick="saveColorLocation('${item}','${color}')"
+          style="${saved?'display:none':''}">Save</button>
+      </div>`;
+    }).join('');
+    const savedDate=dropDates[fkey(item)]||'';
+    return `<div class="loc-card">
+      <div class="loc-card-header">
+        <div style="flex:1;min-width:0">
+          <div class="loc-item-code">${item}</div>
+          ${data.styleName?`<div class="loc-item-name">${data.styleName}</div>`:''}
+        </div>
+        <span class="loc-ctns">${ctns.length} cartons · ${colors.length} colors</span>
+        <span class="loc-badge-done">✓ Done</span>
+        <button onclick="removeFromStorage('${item}')" style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;color:#dc2626;margin-right:4px">✕ Remove</button>
+      </div>
+      <div class="loc-locations">${colorRows}</div>
+      <div class="drop-date-row">
+        <span class="drop-date-label">📅 Drop Date:</span>
+        <input class="drop-date-input ${savedDate?'saved':''}" type="date" id="drop-date-inp-${item}"
+          value="${savedDate}" onchange="onDropDateChange('${item}')">
+        <button class="drop-date-save-btn" id="drop-date-btn-${item}"
+          onclick="saveDropDate('${item}')"
+          style="${savedDate?'display:none':''}">Save</button>
+        ${savedDate?`<span style="font-size:11px;color:#7c3aed;font-weight:600">✓ ${formatDate(savedDate)}</span>`:''}
+        ${savedDate?`<button onclick="removeDropDate('${item}')" style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;color:#dc2626">✕ מחק תאריך</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function formatDate(d){
+  if(!d)return'';
+  const [y,m,day]=d.split('-');
+  return day+'/'+m+'/'+y;
+}
+
+function onDropDateChange(item){
+  const btn=document.getElementById('drop-date-btn-'+item);
+  const inp=document.getElementById('drop-date-inp-'+item);
+  if(btn)btn.style.display='';
+  if(inp){inp.className='drop-date-input';const s=inp.nextElementSibling;if(s&&s.tagName==='SPAN')s.remove();}
+}
+
+async function saveDropDate(item){
+  const inp=document.getElementById('drop-date-inp-'+item);
+  if(!inp||!inp.value)return;
+  const val=inp.value;
+  await db.ref('dropDates/'+fkey(item)).set(val);
+  notify('✓ Drop date saved: '+formatDate(val));
+  renderLocations();
+}
+
+function toggleDropItem(item){
+  dropsExpanded['img_'+item]=!dropsExpanded['img_'+item];
+  renderDrops();
+}
+
+function uploadDropImage(item){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';
+  inp.onchange=async(e)=>{
+    const file=e.target.files[0];if(!file)return;
+    if(file.size>3*1024*1024){notify('התמונה גדולה מדי — מקסימום 3MB','error');return;}
+    notify('מעלה תמונה...');
+    const reader=new FileReader();
+    reader.onload=async(ev)=>{
+      const b64=ev.target.result;
+      await db.ref('dropImages/'+fkey(item)).set(b64);
+      notify('✓ תמונה נשמרה!');
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+
+async function removeDropImage(item){
+  await db.ref('dropImages/'+fkey(item)).remove();
+  notify('✓ תמונה הוסרה');
+}
+
+async function removeDropDate(item){
+  if(!confirm('למחוק את תאריך ה-Drop?'))return;
+  await db.ref('dropDates/'+fkey(item)).remove();
+  notify('✓ תאריך נמחק');
+  renderLocations();
+}
+
+async function removeItemFromDrop(item){
+  if(!confirm('להסיר פריט זה מה-Drop?'))return;
+  await db.ref('dropDates/'+fkey(item)).remove();
+  notify('✓ פריט הוסר מה-Drop');
+  renderDrops();
+}
+
+function showDrops(){
+  document.getElementById('page-main').className='page';
+  document.getElementById('page-locations').className='page';
+  document.getElementById('page-drops').className='page active';
+  renderDrops();
+  renderDropAddPanel();
+}
+
+// ===== Cross-shipment item helpers (for Drops "+" panel) =====
+function getAllItemsAcrossShipments(){
+  // item code -> { item, data:{styleName,ctns:Set,entries:[]}, shipNames:[...], shipName, shipIds:[...] }
+  const result={};
+  Object.entries(shipments).forEach(([shipId,ship])=>{
+    const entries=ship.entries||[];
+    const itemMap=groupByItem(entries);
+    Object.entries(itemMap).forEach(([item,data])=>{
+      if(!result[item]){
+        result[item]={item,data:{item:data.item,styleName:data.styleName,ctns:new Set([...data.ctns]),entries:[...data.entries]},shipNames:[ship.name],shipName:ship.name,shipIds:[shipId]};
+      } else {
+        data.ctns.forEach(c=>result[item].data.ctns.add(c));
+        result[item].data.entries.push(...data.entries);
+        if(!result[item].data.styleName&&data.styleName)result[item].data.styleName=data.styleName;
+        if(!result[item].shipNames.includes(ship.name))result[item].shipNames.push(ship.name);
+        if(!result[item].shipIds.includes(shipId))result[item].shipIds.push(shipId);
+      }
+    });
+  });
+  return result;
+}
+
+function shipBadges(shipNames){
+  // Render a badge for EVERY shipment the item appears in
+  return (shipNames||[]).map(sn=>`<span class="all-ship-badge">${sn}</span>`).join(' ');
+}
+
+function getItemsWithDropDates(){
+  // Every item (from ANY shipment) that has a drop date set — regardless of completion status
+  const allItems=getAllItemsAcrossShipments();
+  const result=[];
+  Object.values(allItems).forEach(({item,data,shipNames})=>{
+    const date=dropDates[fkey(item)];
+    if(date)result.push({item,data,shipNames,date});
+  });
+  return result;
+}
+
+// ===== "+" Add-to-drop panel (top of page) =====
+function toggleDropAddPanel(){
+  dropAddPanelOpen=!dropAddPanelOpen;
+  renderDropAddPanel();
+}
+
+function renderDropAddPanel(){
+  const el=document.getElementById('drop-add-panel');
+  if(!el)return;
+  if(!dropAddPanelOpen){el.innerHTML='';return;}
+  el.innerHTML=`
+    <div style="background:#fff;border:1.5px solid #7c3aed;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-weight:700;color:#7c3aed;font-size:14px">➕ דרופ חדש</span>
+        <button onclick="toggleDropAddPanel()" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:18px;line-height:1">✕</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <span style="font-size:13px;color:#666;font-weight:600">📅 תאריך דרופ:</span>
+        <input type="date" id="drop-add-date" value="${dropAddDate}"
+          onchange="dropAddDate=this.value;renderDropAddResults()"
+          style="border:1.5px solid #ddd;border-radius:8px;padding:7px 10px;font-size:13px;outline:none">
+        <button onclick="saveNewDropDate()" style="background:#7c3aed;border:none;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;color:#fff;font-weight:700;white-space:nowrap">💾 שמור דרופ</button>
+      </div>
+      <div style="font-size:11px;color:#aaa;margin-bottom:10px">בחרי תאריך ולחצי "שמור דרופ" כדי ליצור אותו — ואז אפשר לחפש ולהוסיף פריטים כאן או בתוך הדרופ עצמו.</div>
+      <input type="text" id="drop-add-search" placeholder="חיפוש פריט מכל המשלוחים (קוד / שם)..." value="${dropAddSearch}"
+        oninput="dropAddSearch=this.value;renderDropAddResults()"
+        style="width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;margin-bottom:10px">
+      <div id="drop-add-results"></div>
+    </div>`;
+  renderDropAddResults();
+}
+
+function dropResultRowHTML(item,data,shipNames,activeDate,addCall,removeCall){
+  const colors=[...new Set((data.entries||[]).map(e=>e.color).filter(Boolean))].sort();
+  const currentDate=dropDates[fkey(item)];
+  const addedHere=currentDate&&currentDate===activeDate;
+  const addedOther=currentDate&&currentDate!==activeDate;
+  return `<div style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid #f5f5f5;flex-wrap:wrap">
+      <div style="flex:1;min-width:0">
+        <span style="font-weight:700;font-size:13px">${item}</span>
+        <span style="font-size:12px;color:#666;margin:0 6px">${data.styleName||''}</span>
+        <span style="font-size:11px;color:#aaa">${colors.join(' · ')}</span>
+        ${shipBadges(shipNames)}
+        ${addedOther?`<span style="font-size:11px;color:#f59e0b;font-weight:600">📅 ${formatDate(currentDate)}</span>`:''}
+      </div>
+      ${addedHere
+        ? `<button onclick="${removeCall}" style="background:#e8f5e9;border:1px solid #81c784;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;color:#2e7d32;font-weight:600;white-space:nowrap">✓ נוסף · הסר</button>`
+        : `<button onclick="${addCall}" style="background:#7c3aed;border:none;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;color:#fff;font-weight:600;white-space:nowrap">+ הוסף</button>`}
+    </div>`;
+}
+
+function matchingDropItems(q){
+  const allItems=getAllItemsAcrossShipments();
+  let list=Object.values(allItems).filter(({item,data})=>
+    item.toLowerCase().includes(q)||(data.styleName||'').toLowerCase().includes(q));
+  list.sort((a,b)=>a.item.localeCompare(b.item));
+  return list;
+}
+
+function renderDropAddResults(){
+  const el=document.getElementById('drop-add-results');
+  if(!el)return;
+  if(!dropAddDate){
+    el.innerHTML='<div style="font-size:12px;color:#f59e0b;padding:8px;font-weight:600">בחרי תאריך דרופ קודם ☝️</div>';
+    return;
+  }
+  const q=dropAddSearch.trim().toLowerCase();
+  if(!q){
+    el.innerHTML='<div style="font-size:12px;color:#aaa;padding:8px">הקלידי קוד או שם כדי לחפש פריטים מכל המשלוחים...</div>';
+    return;
+  }
+  const list=matchingDropItems(q);
+  if(list.length===0){el.innerHTML='<div style="font-size:12px;color:#aaa;padding:8px">לא נמצאו פריטים תואמים</div>';return;}
+  el.innerHTML=list.slice(0,60).map(({item,data,shipNames})=>
+    dropResultRowHTML(item,data,shipNames,dropAddDate,`addItemToDropDate('${item}')`,`removeItemFromDropQuick('${item}')`)
+  ).join('');
+}
+
+async function saveNewDropDate(){
+  if(!dropAddDate){notify('בחרי תאריך קודם','error');return;}
+  await db.ref('dropDateList/'+dropAddDate).set(true);
+  dropsExpanded[dropAddDate]=true;
+  notify('✓ דרופ '+formatDate(dropAddDate)+' נוצר — אפשר להוסיף פריטים');
+  renderDrops();
+}
+
+async function addItemToDropDate(item){
+  if(!dropAddDate){notify('בחרי תאריך דרופ קודם','error');return;}
+  // Shared dropDates field -> also updates the date shown in Storage Locations
+  await db.ref('dropDates/'+fkey(item)).set(dropAddDate);
+  await db.ref('dropDateList/'+dropAddDate).set(true);
+  notify('✓ '+item+' נוסף לדרופ '+formatDate(dropAddDate)+' (עודכן גם ב-Storage Locations)');
+  renderDropAddResults();
+}
+
+async function removeItemFromDropQuick(item){
+  await db.ref('dropDates/'+fkey(item)).remove();
+  notify('✓ '+item+' הוסר מהדרופ');
+  renderDropAddResults();
+}
+
+// ===== Inline "add item" inside an OPEN drop card =====
+function toggleDropCardAdd(date){
+  if(dropCardAddOpen===date){dropCardAddOpen=null;}
+  else{dropCardAddOpen=date;dropCardAddSearch='';dropsExpanded[date]=true;}
+  renderDrops();
+}
+
+function renderDropCardResults(date){
+  const el=document.getElementById('drop-card-results-'+fkey(date));
+  if(!el)return;
+  const q=dropCardAddSearch.trim().toLowerCase();
+  if(!q){el.innerHTML='<div style="font-size:12px;color:#aaa;padding:6px">הקלידי קוד או שם כדי לחפש פריט מכל המשלוחים...</div>';return;}
+  const list=matchingDropItems(q);
+  if(list.length===0){el.innerHTML='<div style="font-size:12px;color:#aaa;padding:6px">לא נמצאו פריטים תואמים</div>';return;}
+  el.innerHTML=list.slice(0,60).map(({item,data,shipNames})=>
+    dropResultRowHTML(item,data,shipNames,date,`addItemToThisDrop('${item}','${date}')`,`removeItemFromThisDrop('${item}')`)
+  ).join('');
+}
+
+async function addItemToThisDrop(item,date){
+  await db.ref('dropDates/'+fkey(item)).set(date);
+  await db.ref('dropDateList/'+date).set(true);
+  notify('✓ '+item+' נוסף לדרופ '+formatDate(date)+' (עודכן גם ב-Storage Locations)');
+  // dropDates listener re-renders + restores focus to the card search
+}
+
+async function removeItemFromThisDrop(item){
+  await db.ref('dropDates/'+fkey(item)).remove();
+  notify('✓ '+item+' הוסר מהדרופ');
+}
+
+async function deleteEmptyDrop(date){
+  if(!confirm('למחוק את הדרופ של '+formatDate(date)+'?'))return;
+  await db.ref('dropDateList/'+date).remove();
+  if(dropCardAddOpen===date)dropCardAddOpen=null;
+  notify('✓ דרופ נמחק');
+  renderDrops();
+}
+
+function renderDrops(){
+  const completed=getItemsWithDropDates();
+  const el=document.getElementById('drops-list');
+
+  // Group items by drop date
+  const byDate={};
+  completed.forEach(({item,data,shipNames})=>{
+    const date=dropDates[fkey(item)];
+    if(!date)return;
+    if(!byDate[date])byDate[date]=[];
+    byDate[date].push({item,data,shipNames});
+  });
+
+  // Merge in empty drop dates (created via "Save") so they show even with 0 items
+  const allDates=new Set([...Object.keys(byDate),...Object.keys(dropDateList||{})]);
+  const dates=[...allDates].sort();
+  document.getElementById('drops-subtitle').textContent=dates.length+' drop dates';
+
+  if(dates.length===0){
+    el.innerHTML=`<div class="loc-empty">
+      <div class="loc-empty-icon">📅</div>
+      <div class="loc-empty-title">עדיין אין דרופים</div>
+      <div class="loc-empty-sub">לחצי על "➕ הוסף לדרופ" כדי ליצור דרופ חדש</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML=dates.map(date=>{
+    const items=byDate[date]||[];
+    const women=items.filter(({item})=>!item.startsWith('LADD'));
+    const kids=items.filter(({item})=>item.startsWith('LADD'));
+    const total=items.length;
+    // Empty drops open by default so items can be added immediately
+    let expanded=dropsExpanded[date];
+    if(expanded===undefined)expanded=(total===0);
+
+    const renderSection=(list,title,emoji,borderTop)=>{
+      if(list.length===0)return'';
+      return `<div class="drops-section-title" style="${borderTop?'border-top:2px solid #f0f0f0;margin-top:4px':''}">${emoji} ${title} (${list.length})</div>`+
+        list.map(({item,data,shipNames})=>{
+          const colors=[...new Set(data.entries.map(e=>e.color).filter(Boolean))].sort();
+          const imgKey=fkey(item);
+          const img=dropImages[imgKey]||'';
+          const imgOpen=dropsExpanded['img_'+item]===true;
+          return `<div>
+            <div class="drops-item-row">
+              <div style="flex:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;cursor:pointer" onclick="toggleDropItem('${item}')">
+                <span class="drops-item-code">${item}</span>
+                <span class="drops-item-name">${data.styleName||''}</span>
+                <span class="drops-item-colors">${colors.join(' · ')}</span>
+                ${shipBadges(shipNames)}
+                ${img?'<span style="font-size:11px;color:#7c3aed;font-weight:600">📷</span>':''}
+                <span style="font-size:11px;color:#ccc">${imgOpen?'▲':'▼'}</span>
+              </div>
+              <button onclick="event.stopPropagation();removeItemFromDrop('${item}')" style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;color:#dc2626;white-space:nowrap;flex-shrink:0">✕ הסר</button>
+            </div>
+            ${imgOpen?`<div class="drop-img-section">
+              ${img?`<img class="drop-img-preview" src="${img}" alt="${item}">`:
+                '<div style="font-size:12px;color:#aaa;margin-bottom:8px">אין תמונה עדיין</div>'}
+              <div class="drop-img-btns">
+                <button class="btn-upload-img" onclick="uploadDropImage('${item}')">📷 ${img?'החלף תמונה':'הוסף תמונה'}</button>
+                ${img?`<button class="btn-remove-img" onclick="removeDropImage('${item}')">🗑 הסר</button>`:''}
+                ${img?`<span class="drop-img-saved">✓ תמונה שמורה</span>`:''}
+              </div>
+            </div>`:''}
+          </div>`;
+        }).join('');
+    };
+
+    const cardAddOpen=dropCardAddOpen===date;
+    const addArea=`<div style="padding:10px 16px;border-top:1px solid #f0f0f0;background:#faf9ff">
+        <button onclick="toggleDropCardAdd('${date}')" style="background:${cardAddOpen?'#ede9fe':'#7c3aed'};color:${cardAddOpen?'#7c3aed':'#fff'};border:1px solid #7c3aed;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:600">${cardAddOpen?'✕ סגור חיפוש':'➕ הוסף פריט לדרופ הזה'}</button>
+        ${cardAddOpen?`<div style="margin-top:10px">
+          <input type="text" id="drop-card-search-${fkey(date)}" placeholder="חיפוש פריט מכל המשלוחים (קוד / שם)..." value="${dropCardAddSearch}"
+            oninput="dropCardAddSearch=this.value;renderDropCardResults('${date}')"
+            style="width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;margin-bottom:8px">
+          <div id="drop-card-results-${fkey(date)}"></div>
+        </div>`:''}
+      </div>`;
+
+    return `<div class="drops-date-card">
+      <div class="drops-date-header" onclick="dropsExpanded['${date}']=!(${expanded});renderDrops()">
+        <div>
+          <div class="drops-date-title">${formatDate(date)}</div>
+          <div class="drops-date-count">${total} styles${women.length?(' · '+women.length+' women'):''}${kids.length?(' · '+kids.length+' kids'):''}</div>
+        </div>
+        <span style="font-size:12px;color:#ccc">${expanded?'▲':'▼'}</span>
+      </div>
+      ${expanded?`<div class="drops-date-body">
+        ${total===0?'<div style="padding:10px 16px;font-size:13px;color:#aaa">אין עדיין פריטים בדרופ הזה — הוסיפי דרך הכפתור למטה.</div>':''}
+        ${renderSection(women,'Women','👩',false)}
+        ${renderSection(kids,'Kids','👧',women.length>0)}
+        ${addArea}
+        ${total===0?`<div style="padding:0 16px 12px"><button onclick="deleteEmptyDrop('${date}')" style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:5px 11px;font-size:11px;cursor:pointer;color:#dc2626">🗑 מחק דרופ ריק</button></div>`:''}
+      </div>`:''}
+    </div>`;
+  }).join('');
+
+  // Restore focus to the open card's search input after a full rebuild
+  if(dropCardAddOpen){
+    const inp=document.getElementById('drop-card-search-'+fkey(dropCardAddOpen));
+    if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);renderDropCardResults(dropCardAddOpen);}
+  }
+}
+
+function setPrefixFilter(p){
+  prefixFilter=p;
+  render();
+}
+
+function togglePrefixPopup(e){
+  e.stopPropagation();
+  const pop=document.getElementById('prefix-popup');
+  if(pop)pop.className='prefix-popup'+(pop.classList.contains('open')?'':' open');
+}
+function closePrefixPopup(){
+  const pop=document.getElementById('prefix-popup');
+  if(pop)pop.className='prefix-popup';
+}
+document.addEventListener('click',()=>closePrefixPopup());
+
+function render(){
+  const entries=getCurrentEntries();
+  const ctnMap=groupByCTN(entries);
+  const itemMap=groupByItem(entries);
+  allEntriesByCtn=ctnMap;
+
+  // Sort: pending+unopened first, confirmed opened last
+  const allCtns=Object.keys(ctnMap).sort();
+  const pending=allCtns.filter(c=>pendingOpened[c]&&!openedCtns[c]);
+  const unopened=allCtns.filter(c=>!openedCtns[c]&&!pendingOpened[c]);
+  const opened=allCtns.filter(c=>openedCtns[c]);
+  const sortedCtns=[...pending,...unopened,...opened];
+
+  const openedCount=allCtns.filter(c=>openedCtns[c]).length;
+  const totalQty=entries.reduce((s,e)=>s+e.qty,0);
+
+  // Completed badge
+  const completedCount=getCompletedItems().length;
+  const pendingLocCount=getPendingLocationCount();
+  const btnLoc=document.getElementById('btn-locations');
+  const badge=document.getElementById('locations-badge');
+  const btnDrops=document.getElementById('btn-drops');
+  if(completedCount>0){
+    btnLoc.style.display='flex';
+    badge.textContent=pendingLocCount>0?pendingLocCount:'✓';
+    badge.style.background=pendingLocCount>0?'#ef4444':'#16a34a';
+  } else {
+    btnLoc.style.display='none';
+  }
+  // Drops button is ALWAYS available once a shipment is loaded,
+  // even if the active shipment has no items assigned to a drop.
+  if(btnDrops)btnDrops.style.display=activeShipment?'flex':'none';
+  const btnExport=document.getElementById('btn-export-main');
+  if(btnExport)btnExport.style.display=activeShipment?'flex':'none';
+
+  // Shipment selector
+  const keys=Object.keys(shipments);
+  const shipBar=document.getElementById('shipment-bar');
+  const shipSel=document.getElementById('shipment-select');
+  if(keys.length>0){
+    shipBar.style.display='flex';
+    shipSel.innerHTML=keys.map(id=>`<option value="${id}" ${activeShipment===id?'selected':''}>${shipments[id].name} (${shipments[id].date})</option>`).join('');
+  } else {
+    shipBar.style.display='none';
+  }
+
+  if(!activeShipment){
+    document.getElementById('stats-bar').style.display='none';
+    document.getElementById('search-section').style.display='none';
+    document.getElementById('list-header').style.display='none';
+    document.getElementById('main-list').innerHTML=`<div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">Upload a PL file to get started</div>
+      <div class="empty-sub">Excel file in XLS or XLSX format</div>
+    </div>`;
+    return;
+  }
+
+  // Stats
+  const pct=allCtns.length>0?Math.round(openedCount/allCtns.length*100):0;
+  const kidsCtns=allCtns.filter(c=>ctnMap[c].some(e=>e.item.startsWith('LADD')));
+  const womenCtns=allCtns.filter(c=>ctnMap[c].some(e=>e.item.startsWith('ADD')));
+  const kidsItems=new Set(entries.filter(e=>e.item.startsWith('LADD')).map(e=>e.item)).size;
+  const womenItems=new Set(entries.filter(e=>e.item.startsWith('ADD')).map(e=>e.item)).size;
+  // Prefix breakdown
+  const prefixMap={};
+  allCtns.forEach(c=>{
+    const m=c.match(/^([A-Za-z]+)/);
+    if(m){const p=m[1].toUpperCase();if(!prefixMap[p]){prefixMap[p]=[];}prefixMap[p].push(c);}
+  });
+  const prefixes=Object.keys(prefixMap).sort();
+  const multiPrefix=prefixes.length>1;
+
+  // Update popup in header
+  const wrapEl=document.getElementById('prefix-popup-wrap');
+  const simpleEl=document.getElementById('header-icon-simple');
+  if(multiPrefix&&wrapEl&&simpleEl){
+    wrapEl.style.display='flex';
+    simpleEl.style.display='none';
+    document.getElementById('prefix-badge').textContent=prefixes.length;
+    document.getElementById('prefix-popup-rows').innerHTML=prefixes.map(p=>{
+      const nums=prefixMap[p].map(c=>parseInt(c.replace(/[^0-9]/g,''))).filter(n=>!isNaN(n));
+      const mn=Math.min(...nums),mx=Math.max(...nums);
+      return `<div class="prefix-popup-row">
+        <span class="prefix-popup-name">${p}</span>
+        <span class="prefix-popup-range">${prefixMap[p].length} קרטונים · ${mn}–${mx}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('prefix-popup-btns').innerHTML=
+      `<button onclick="setPrefixFilter('');closePrefixPopup()" style="padding:3px 10px;font-size:11px;border-radius:5px;border:1px solid ${prefixFilter===''?'#1a1a1a':'#ddd'};background:${prefixFilter===''?'#1a1a1a':'#f5f5f5'};color:${prefixFilter===''?'#fff':'#555'};cursor:pointer;font-weight:600">הכל</button>`+
+      prefixes.map(p=>`<button onclick="setPrefixFilter('${p}');closePrefixPopup()" style="padding:3px 10px;font-size:11px;border-radius:5px;border:1px solid ${prefixFilter===p?'#1a1a1a':'#ddd'};background:${prefixFilter===p?'#1a1a1a':'#f5f5f5'};color:${prefixFilter===p?'#fff':'#555'};cursor:pointer;font-weight:600">${p}</button>`).join('');
+  } else if(wrapEl&&simpleEl){
+    wrapEl.style.display='none';
+    simpleEl.style.display='';
+  }
+
+
+
+  // We need ctnsToShow for the count — compute prefix-filtered count
+  const filteredCtnsCount=prefixFilter?allCtns.filter(c=>c.toUpperCase().startsWith(prefixFilter.toUpperCase())).length:allCtns.length;
+  const totalCardInnerFinal=`<div class="stat-label">Total Cartons${prefixFilter?` · <span style="color:#7c3aed;font-size:10px">${prefixFilter}</span>`:''}</div><div class="stat-value">${filteredCtnsCount}${prefixFilter?`<span class="stat-sub"> / ${allCtns.length}</span>`:''}</div>`;
+
+  document.getElementById('stats-bar').style.display='grid';
+  document.getElementById('stats-bar').innerHTML=`
+    <div class="stat-card">${totalCardInnerFinal}</div>
+    <div class="stat-card" style="cursor:pointer" onclick="openStatsPanel('kids')"><div class="stat-label">👧 Kids <span style="font-size:10px;color:#bbb">▼</span></div><div class="stat-value">${kidsCtns.length}<span class="stat-sub"> (${kidsItems} styles)</span></div></div>
+    <div class="stat-card" style="cursor:pointer" onclick="openStatsPanel('women')"><div class="stat-label">👩 Women <span style="font-size:10px;color:#bbb">▼</span></div><div class="stat-value">${womenCtns.length}<span class="stat-sub"> (${womenItems} styles)</span></div></div>
+    <div class="stat-card progress-card green" style="cursor:pointer" onclick="openStatsPanel('opened')">
+      <div class="stat-label">Opened <span style="font-size:10px;color:#bbb">▼</span></div>
+      <div class="stat-value">${openedCount}<span class="stat-sub"> / ${allCtns.length}</span></div>
+      <div class="stat-progress-bar"><div class="stat-progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+
+  document.getElementById('search-section').style.display='block';
+  document.getElementById('list-header').style.display='block';
+
+  // Restore search input value
+  const inp=document.getElementById('search-input');
+  if(inp&&inp.value!==searchQuery){inp.value=searchQuery;}
+  document.getElementById('clear-btn').style.display=searchQuery?'block':'none';
+  // Show "Search All Shipments" only when query + multiple shipments
+  const allShipRow=document.getElementById('search-all-row');
+  if(allShipRow){
+    const multiShip=Object.keys(shipments).length>1;
+    allShipRow.style.display=(searchQuery&&multiShip)?'flex':'none';
+  }
+
+  const listEl=document.getElementById('main-list');
+  const countEl=document.getElementById('list-count');
+
+  if(searchQuery&&searchMode==='item'){
+    const q=searchQuery.toLowerCase();
+    let matches=Object.entries(itemMap).filter(([item,v])=>item.toLowerCase().includes(q)||v.styleName.toLowerCase().includes(q));
+    if(categoryFilter!=='all')matches=matches.filter(([item])=>categoryMatch(item));
+    countEl.textContent=matches.length+' styles found';
+    if(matches.length===0){listEl.innerHTML='<div class="no-results">No matching styles found</div>';return;}
+    listEl.innerHTML=matches.map(([item,data])=>renderItemCard(item,data)).join('');
+    return;
+  }
+
+  let ctnsToShow=sortedCtns;
+  if(prefixFilter) ctnsToShow=ctnsToShow.filter(c=>c.toUpperCase().startsWith(prefixFilter.toUpperCase()));
+  if(searchQuery&&searchMode==='ctn') ctnsToShow=ctnsToShow.filter(c=>c.toLowerCase().includes(searchQuery.toLowerCase()));
+  if(categoryFilter!=='all') ctnsToShow=ctnsToShow.filter(c=>ctnMap[c].some(e=>categoryMatch(e.item)));
+  if(multiStyleFilter) ctnsToShow=ctnsToShow.filter(c=>isMultiStyleCarton(ctnMap[c]));
+  countEl.textContent=(searchQuery||categoryFilter!=='all'||multiStyleFilter)?ctnsToShow.length+' cartons found':allCtns.length+' Cartons';
+  if(ctnsToShow.length===0){listEl.innerHTML='<div class="no-results">No matching cartons found</div>';return;}
+  listEl.innerHTML=ctnsToShow.map(ctn=>renderCTNCard(ctn,ctnMap[ctn])).join('');
+  if(typeof updateScrollButtons==='function')updateScrollButtons();
+}
+
+function itemHasLocation(itemCode){
+  const key=fkey(itemCode);
+  if(!locations[key])return false;
+  return Object.values(locations[key]).some(v=>v);
+}
+
+function renderCTNCard(ctn,items,shipmentName){
+  const opened=!!openedCtns[ctn];
+  const pending=!!pendingOpened[ctn];
+  const expanded=expandedCards[ctn]===true;
+  const totalQty=items.reduce((s,i)=>s+i.qty,0);
+  const styleNames=[...new Set(items.map(i=>i.styleName||i.item))];
+  const previewText=styleNames.join(' · ');
+  const uniqueStyleCodes=[...new Set(items.map(i=>i.item))];
+  const isMulti=uniqueStyleCodes.length>1;
+  let cardClass=opened?'opened':pending?'pending':'';
+  if(isMulti)cardClass+=' multi-style';
+  // Check if any item in this carton has a location
+  const hasLocItems=items.filter(i=>itemHasLocation(i.item));
+  const hasLoc=hasLocItems.length>0;
+  let html=`<div class="ctn-card ${cardClass}">
+    <div class="ctn-header" onclick="toggleExpand('${ctn}')">
+      <button class="check-btn ${opened||pending?'checked':''}" style="${pending&&!opened?'background:#e8f5e9;border-color:#4caf50;color:#2e7d32':''}" onclick="event.stopPropagation();toggleCTN('${ctn}')">${opened?'✓':pending?'✓':''}</button>
+      <span class="ctn-number">${ctn}</span>
+      <span class="ctn-style-name">${previewText}</span>
+      ${shipmentName?`<span class="all-ship-badge">${shipmentName}</span>`:''}
+      ${opened?'<span class="badge-open">Opened ✓</span>':''}
+      ${hasLoc&&!opened?`<span class="badge-has-loc">📍 Has locations</span>`:''}
+      ${isMulti?`<span class="badge-multi-style">⚠ ${uniqueStyleCodes.length} styles in this carton</span>`:''}
+      <span class="ctn-meta">${totalQty} pcs</span>
+      <span class="chevron ${expanded?'open':''}">▼</span>
+    </div>`;
+  if(expanded){
+    html+=`<div class="ctn-body"><table>
+      <thead><tr><th>Style Code</th><th>Color</th><th>Sizes</th><th>Qty</th></tr></thead><tbody>`+
+      items.map(item=>{
+        const hasItemLoc=itemHasLocation(item.item);
+        const locText=hasItemLoc?` <span style="font-size:10px;color:#d97706">📍</span>`:'';
+        return `<tr class="${hasItemLoc?'has-loc-row':''}">
+          <td><div class="item-code">${item.item}${locText}</div>${item.styleName?`<div class="item-sname">${item.styleName}</div>`:''}</td>
+          <td>${item.color}</td>
+          <td class="sizes-cell">${Object.entries(item.sizes).map(([s,q])=>`${s}:${q}`).join(' ')}</td>
+          <td class="qty-cell">${item.qty}</td>
+        </tr>`;
+      }).join('')+`</tbody></table></div>`;
+  }
+  return html+'</div>';
+}
+
+function renderItemCard(item,data,shipmentName){
+  const ctns=[...data.ctns].sort();
+  const totalQty=data.entries.reduce((s,e)=>s+e.qty,0);
+  const expanded=expandedCards['item_'+item]===true;
+  const allOpened=ctns.every(c=>openedCtns[c]);
+  // Check if this style has locations
+  const itemKey=fkey(item);
+  const hasLoc=locations[itemKey]&&Object.values(locations[itemKey]).some(v=>v);
+  const locColors=hasLoc?Object.entries(locations[itemKey]).filter(([k,v])=>v).map(([k,v])=>`${k.replace('loc','Location ')}: ${v}`).join(' · '):'';
+  let html=`<div class="item-card ${hasLoc?'item-has-loc':''}">`;
+  if(hasLoc){
+    html+=`<div class="location-banner">📍 This style has saved locations: ${locColors}</div>`;
+  }
+  html+=`<div class="item-header" onclick="toggleExpand('item_${item}')">
+      <div style="flex:1;min-width:0">
+        <div class="item-title">${data.styleName||item}</div>
+        <div class="item-sub">${item} · ${ctns.length} cartons · ${totalQty} pcs${shipmentName?` · <span style="color:#1d4ed8">${shipmentName}</span>`:''}</div>
+      </div>
+      <span class="chevron ${expanded?'open':''}">▼</span>
+    </div>`;
+  if(expanded){
+    html+=`<div class="item-actions" data-item="${item}" data-ctns="${[...data.ctns].join(',')}">
+      <button class="btn-mark-all" onclick="markFromParent(this,true)">✓ Mark All Cartons</button>
+      <button class="btn-mark-all" style="background:#666" onclick="markFromParent(this,false)">↩ Unmark All</button>
+      <button class="btn-done" onclick="doneFromParent(this)">✅ Done → Storage</button>
+    </div>
+    <div class="ctn-chips">`+ctns.map(ctn=>{
+      const isOpen=!!openedCtns[ctn];
+      const isPending=!!pendingOpened[ctn];
+      const colors=data.entries.filter(e=>e.ctn===ctn).map(e=>e.color).filter(Boolean).join(', ');
+      const fullCtnItems=allEntriesByCtn[ctn]||data.entries.filter(e=>e.ctn===ctn);
+      const isMultiChip=new Set(fullCtnItems.map(e=>e.item)).size>1;
+      let chipClass=isOpen||isPending?'opened':'';
+      if(isMultiChip)chipClass+=' multi-style';
+      const checkClass=isOpen||isPending?'checked':'';
+      const checkStyle=isPending&&!isOpen?'background:#e8f5e9;border-color:#4caf50;color:#2e7d32':'';
+      return `<div class="ctn-chip ${chipClass}">
+        <div class="chip-check ${checkClass}" style="${checkStyle}" onclick="toggleCTN('${ctn}')">${isOpen||isPending?'✓':''}</div>
+        <span class="chip-name">${ctn}</span>
+        ${colors?`<span class="chip-color">${colors}</span>`:''}
+        ${isMultiChip?`<span class="chip-multi-icon" title="Multi-style carton">⚠</span>`:''}
+      </div>`;
+    }).join('')+'</div>';
+  }
+  return html+'</div>';
+}
+
+function openStatsPanel(type){
+  const entries=getCurrentEntries();
+  const panel=document.getElementById('stats-panel');
+  const title=document.getElementById('stats-panel-title');
+  const list=document.getElementById('stats-panel-list');
+  const exportBtn=document.getElementById('stats-panel-export-btn');
+
+  if(type==='opened'){
+    if(exportBtn)exportBtn.style.display='none';
+    const ctnMap=groupByCTN(entries);
+    const openedList=Object.keys(ctnMap).filter(c=>openedCtns[c]).sort();
+    title.textContent='📂 Opened Cartons — '+openedList.length+' cartons';
+    if(openedList.length===0){
+      list.innerHTML='<div class="no-results">No cartons opened yet</div>';
+    } else {
+      list.innerHTML=openedList.map(ctn=>{
+        const items=ctnMap[ctn];
+        const totalQty=items.reduce((s,i)=>s+i.qty,0);
+        const names=[...new Set(items.map(i=>i.styleName||i.item))].join(' · ');
+        return `<div class="variant-row">
+          <span class="variant-name">${ctn}</span>
+          <span class="variant-color">${names}</span>
+          <span class="variant-qty">${totalQty} pcs</span>
+        </div>`;
+      }).join('');
+    }
+    panel.className='stats-panel open';
+    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+    return;
+  }
+
+  if(exportBtn)exportBtn.style.display='';
+
+  // Filter by type
+  const filtered=entries.filter(e=>type==='kids'?e.item.startsWith('LADD'):e.item.startsWith('ADD'));
+  
+  // Group by item+color
+  const groups={};
+  filtered.forEach(e=>{
+    const key=e.item+'|||'+e.color;
+    if(!groups[key])groups[key]={item:e.item,styleName:e.styleName,color:e.color,qty:0};
+    groups[key].qty+=e.qty;
+  });
+  
+  const rows=Object.values(groups).sort((a,b)=>a.styleName.localeCompare(b.styleName)||a.color.localeCompare(b.color));
+  
+  title.textContent=(type==='kids'?'👧 Kids Styles':'👩 Women Styles')+' — '+rows.length+' variants';
+  
+  list.innerHTML=rows.map(r=>`
+    <div class="variant-row">
+      <span class="variant-name">${r.styleName||r.item}</span>
+      <span class="variant-color">${r.color}</span>
+      <span class="variant-code">${r.item}</span>
+      <span class="variant-qty">${r.qty} pcs</span>
+    </div>`).join('');
+  
+  panel.className='stats-panel open';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeStatsPanel(){
+  document.getElementById('stats-panel').className='stats-panel';
+}
+
+function exportToExcel(data, filename){
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  // Auto column widths
+  const cols = Object.keys(data[0]||{}).map(k=>({wch:Math.max(k.length,15)}));
+  ws['!cols']=cols;
+  XLSX.writeFile(wb, filename+'.xlsx');
+}
+
+function exportCurrentView(){
+  const entries=getCurrentEntries();
+  if(entries.length===0){notify('אין נתונים לייצוא','error');return;}
+  const ctnMap=groupByCTN(entries);
+  const itemMap=groupByItem(entries);
+  const name=shipments[activeShipment]?.name||'shipment';
+
+  // Build a filename suffix reflecting the active view
+  const suffixParts=[];
+  if(prefixFilter)suffixParts.push(prefixFilter);
+  if(categoryFilter==='women')suffixParts.push('women');
+  if(categoryFilter==='kids')suffixParts.push('kids');
+  if(multiStyleFilter)suffixParts.push('multistyle');
+  if(searchQuery)suffixParts.push('search');
+  const suffix=suffixParts.length?('_'+suffixParts.join('_')):'';
+
+  const rows=[];
+
+  // STYLE search mode -> export the styles currently shown
+  if(searchMode==='item'&&searchQuery){
+    const q=searchQuery.toLowerCase();
+    let matches=Object.entries(itemMap).filter(([item,v])=>item.toLowerCase().includes(q)||v.styleName.toLowerCase().includes(q));
+    if(categoryFilter!=='all')matches=matches.filter(([item])=>categoryMatch(item));
+    matches.forEach(([item,data])=>{
+      data.entries.forEach(e=>{
+        rows.push({
+          'Carton': e.ctn,
+          'Style Code': e.item,
+          'Style Name': e.styleName,
+          'Color': e.color,
+          'Sizes': Object.entries(e.sizes).map(([s,q])=>s+':'+q).join(' '),
+          'Qty': e.qty,
+          'Status': openedCtns[e.ctn]?'Opened':'Pending'
+        });
+      });
+    });
+    if(rows.length===0){notify('אין נתונים לייצוא בתצוגה הנוכחית','error');return;}
+    exportToExcel(rows,name+'_styles'+suffix);
+    notify('✓ יוצאו '+rows.length+' שורות (תצוגה נוכחית)');
+    return;
+  }
+
+  // CARTON mode -> mirror EXACTLY the visible carton list (same filters as the screen)
+  let ctnsToShow=Object.keys(ctnMap).sort();
+  if(prefixFilter)ctnsToShow=ctnsToShow.filter(c=>c.toUpperCase().startsWith(prefixFilter.toUpperCase()));
+  if(searchQuery&&searchMode==='ctn')ctnsToShow=ctnsToShow.filter(c=>c.toLowerCase().includes(searchQuery.toLowerCase()));
+  if(categoryFilter!=='all')ctnsToShow=ctnsToShow.filter(c=>ctnMap[c].some(e=>categoryMatch(e.item)));
+  if(multiStyleFilter)ctnsToShow=ctnsToShow.filter(c=>isMultiStyleCarton(ctnMap[c]));
+
+  ctnsToShow.forEach(ctn=>{
+    const items=ctnMap[ctn];
+    const styleCount=new Set(items.map(i=>i.item)).size;
+    items.forEach(item=>{
+      rows.push({
+        'Carton': ctn,
+        'Style Code': item.item,
+        'Style Name': item.styleName,
+        'Color': item.color,
+        'Sizes': Object.entries(item.sizes).map(([s,q])=>s+':'+q).join(' '),
+        'Qty': item.qty,
+        'Styles in Carton': styleCount,
+        'Status': openedCtns[ctn]?'Opened':'Pending'
+      });
+    });
+  });
+
+  if(rows.length===0){notify('אין נתונים לייצוא בתצוגה הנוכחית','error');return;}
+  exportToExcel(rows,name+'_cartons'+suffix);
+  notify('✓ יוצאו '+rows.length+' שורות מ-'+ctnsToShow.length+' קרטונים (תצוגה נוכחית)');
+}
+
+function exportDrops(){
+  const completed=getItemsWithDropDates();
+
+  // Group by date
+  const byDate={};
+  completed.forEach(({item,data,shipNames})=>{
+    const date=dropDates[fkey(item)];
+    if(!date)return;
+    if(!byDate[date])byDate[date]=[];
+    byDate[date].push({item,data,shipNames});
+  });
+
+  const dates=Object.keys(byDate).sort();
+  if(dates.length===0){notify('אין פריטי Drop לייצוא','error');return;}
+
+  const womenRows=[];
+  const kidsRows=[];
+
+  dates.forEach(date=>{
+    const dateLabel=formatDate(date);
+    const items=byDate[date];
+    const women=items.filter(({item})=>!item.startsWith('LADD'));
+    const kids=items.filter(({item})=>item.startsWith('LADD'));
+
+    women.forEach(({item,data,shipNames})=>{
+      const colors=[...new Set(data.entries.map(e=>e.color).filter(Boolean))].sort();
+      womenRows.push({
+        'Drop Date': dateLabel,
+        'Style Code': item,
+        'Style Name': data.styleName||'',
+        'Colors': colors.join(', '),
+        'Shipment': (shipNames||[]).join(', ')
+      });
+    });
+
+    kids.forEach(({item,data,shipNames})=>{
+      const colors=[...new Set(data.entries.map(e=>e.color).filter(Boolean))].sort();
+      kidsRows.push({
+        'Drop Date': dateLabel,
+        'Style Code': item,
+        'Style Name': data.styleName||'',
+        'Colors': colors.join(', '),
+        'Shipment': (shipNames||[]).join(', ')
+      });
+    });
+  });
+
+  const wb=XLSX.utils.book_new();
+
+  if(womenRows.length>0){
+    const ws=XLSX.utils.json_to_sheet(womenRows);
+    const cols=Object.keys(womenRows[0]).map(k=>({wch:Math.max(k.length,18)}));
+    ws['!cols']=cols;
+    XLSX.utils.book_append_sheet(wb,ws,'👩 Women');
+  }
+  if(kidsRows.length>0){
+    const ws=XLSX.utils.json_to_sheet(kidsRows);
+    const cols=Object.keys(kidsRows[0]).map(k=>({wch:Math.max(k.length,18)}));
+    ws['!cols']=cols;
+    XLSX.utils.book_append_sheet(wb,ws,'👧 Kids');
+  }
+  if(wb.SheetNames.length===0){notify('אין פריטי Drop לייצוא','error');return;}
+
+  XLSX.writeFile(wb,'drops_export.xlsx');
+  const total=womenRows.length+kidsRows.length;
+  notify('✓ יוצאו '+total+' פריטים ('+womenRows.length+' נשים · '+kidsRows.length+' ילדים)');
+}
+
+function exportLocations(){
+  const completed=getCompletedItems();
+  const rows=[];
+  completed.forEach(([item,data])=>{
+    const colors=[...new Set(data.entries.map(e=>e.color).filter(Boolean))].sort();
+    colors.forEach(color=>{
+      const key=fkey(item)+'_'+fkey(color);
+      rows.push({
+        'Style Code': item,
+        'Style Name': data.styleName,
+        'Color': color,
+        'Total Cartons': [...data.ctns].length,
+        'Location': locations[key]||''
+      });
+    });
+  });
+  if(rows.length===0){notify('No locations to export','error');return;}
+  exportToExcel(rows,'storage_locations');
+  notify('✓ Exported '+rows.length+' rows!');
+}
+
+function exportStatsPanel(){
+  const entries=getCurrentEntries();
+  const title=document.getElementById('stats-panel-title').textContent;
+  const isKids=title.includes('Kids');
+  const filtered=entries.filter(e=>isKids?e.item.startsWith('LADD'):e.item.startsWith('ADD'));
+  const groups={};
+  filtered.forEach(e=>{
+    const key=e.item+'|||'+e.color;
+    if(!groups[key])groups[key]={item:e.item,styleName:e.styleName,color:e.color,qty:0};
+    groups[key].qty+=e.qty;
+  });
+  const rows=Object.values(groups).sort((a,b)=>a.styleName.localeCompare(b.styleName)).map(r=>({
+    'Style Name': r.styleName||r.item,
+    'Color': r.color,
+    'Style Code': r.item,
+    'Total Qty': r.qty
+  }));
+  if(rows.length===0){notify('No data to export','error');return;}
+  exportToExcel(rows,(isKids?'kids':'women')+'_styles');
+  notify('✓ Exported '+rows.length+' variants!');
+}
+
+async function removeFromStorage(item){
+  const key=fkey(item);
+  await db.ref('completedItems/'+key).remove();
+  notify('✓ Removed from Storage Locations');
+  renderLocations();
+}
+
+function searchAllShipments(){
+  if(!searchQuery.trim())return;
+  const q=searchQuery.trim().toLowerCase();
+  const listEl=document.getElementById('main-list');
+  const countEl=document.getElementById('list-count');
+  const allResults=[];
+
+  Object.entries(shipments).forEach(([id,ship])=>{
+    const entries=ship.entries||[];
+    if(searchMode==='ctn'){
+      const ctnMap=groupByCTN(entries);
+      Object.entries(ctnMap).filter(([ctn,items])=>ctn.toLowerCase().includes(q)&&(!multiStyleFilter||isMultiStyleCarton(items))).forEach(([ctn,items])=>{
+        allResults.push({type:'ctn',ctn,items,shipName:ship.name});
+      });
+    } else {
+      const itemMap=groupByItem(entries);
+      Object.entries(itemMap).filter(([item,v])=>item.toLowerCase().includes(q)||v.styleName.toLowerCase().includes(q)).forEach(([item,data])=>{
+        allResults.push({type:'item',item,data,shipName:ship.name});
+      });
+    }
+  });
+
+  document.getElementById('search-all-status').textContent=allResults.length+' results across all shipments';
+  countEl.textContent=allResults.length+' results across all shipments';
+
+  if(allResults.length===0){listEl.innerHTML='<div class="no-results">No results found across all shipments</div>';return;}
+
+  if(searchMode==='ctn'){
+    listEl.innerHTML=allResults.map(r=>renderCTNCard(r.ctn,r.items,r.shipName)).join('');
+  } else {
+    listEl.innerHTML=allResults.map(r=>renderItemCard(r.item,r.data,r.shipName)).join('');
+  }
+}
+
+function markFromParent(btn,val){
+  const div=btn.closest('.item-actions');
+  const item=div.dataset.item;
+  const ctns=div.dataset.ctns.split(',').filter(Boolean);
+  const updates={};
+  ctns.forEach(ctn=>{updates['opened/'+ctn.replace(/[.#$\/\[\]]/g,'-')]=val||null;});
+  db.ref().update(updates);
+}
+
+async function doneFromParent(btn){
+  const div=btn.closest('.item-actions');
+  const item=div.dataset.item;
+  const ctns=div.dataset.ctns.split(',').filter(Boolean);
+  const updates={};
+  ctns.forEach(ctn=>{updates['opened/'+ctn.replace(/[.#$\/\[\]]/g,'-')]=true;});
+  await db.ref().update(updates);
+  const key=item.replace(/[.#$\/\[\]]/g,'-');
+  await db.ref('completedItems/'+key).set(true);
+  notify('✓ '+item+' marked as done — sent to Storage Locations!');
+}
+
+// ===== Anonymous auth gate (enables locked Firebase Rules: auth != null) =====
+// Data listeners only attach AFTER we have an authenticated (anonymous) session,
+// so that once the Rules are locked the app still reads/writes normally.
+let _dataListenersStarted=false;
+function startDataListeners(){
+  if(_dataListenersStarted)return;
+  _dataListenersStarted=true;
+
+  db.ref('shipments').on('value',snap=>{
+    const data=snap.val()||{};
+    Object.keys(data).forEach(id=>{if(data[id].entries&&!Array.isArray(data[id].entries))data[id].entries=Object.values(data[id].entries);});
+    shipments=data;
+    const keys=Object.keys(shipments);
+    if(keys.length>0&&(!activeShipment||!shipments[activeShipment]))activeShipment=keys[keys.length-1];
+    if(keys.length===0)activeShipment=null;
+    render();
+  });
+
+  db.ref('opened').on('value',snap=>{
+    const raw=snap.val()||{};
+    openedCtns={};
+    Object.entries(raw).forEach(([k,v])=>{if(v)openedCtns[k]=true;});
+    render();
+  });
+
+  db.ref('locations').on('value',snap=>{
+    locations=snap.val()||{};
+  });
+
+  db.ref('completedItems').on('value',snap=>{
+    completedItems=snap.val()||{};
+    render();
+  });
+
+  db.ref('dropDates').on('value',snap=>{
+    dropDates=snap.val()||{};
+    if(document.getElementById('page-locations').classList.contains('active'))renderLocations();
+    if(document.getElementById('page-drops').classList.contains('active')){renderDrops();renderDropAddResults();}
+  });
+
+  db.ref('dropDateList').on('value',snap=>{
+    dropDateList=snap.val()||{};
+    if(document.getElementById('page-drops').classList.contains('active')){renderDrops();renderDropAddResults();}
+  });
+
+  db.ref('dropImages').on('value',snap=>{
+    dropImages=snap.val()||{};
+    if(document.getElementById('page-drops').classList.contains('active'))renderDrops();
+  });
+}
+
+// Start listeners as soon as we have an authenticated session
+auth.onAuthStateChanged(user=>{
+  if(user)startDataListeners();
+});
+
+// Sign in anonymously (transparent to the user) so the locked Rules are satisfied
+auth.signInAnonymously().catch(err=>{
+  console.error('Anonymous auth failed',err);
+  notify('שגיאת התחברות לשרת — נסי לרענן את הדף','error');
+});
+
+
+</script>
+    <div class="login-title">Addict Boxes</div>
+    <div class="login-sub">Warehouse Management System</div>
+    <input class="login-field" id="login-user" type="text" placeholder="שם משתמש" autocomplete="username"
+      onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    <input class="login-field" id="login-pass" type="password" placeholder="סיסמה" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">כניסה</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<button class="scroll-top" id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<button class="scroll-bottom" id="scroll-bottom-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})">↓</button>
+
+<script>
+function updateScrollButtons(){
+  const top=document.getElementById('scroll-top-btn');
+  const bottom=document.getElementById('scroll-bottom-btn');
+  if(!top||!bottom)return;
+  top.className='scroll-top'+(window.scrollY>300?' visible':'');
+  const atBottom=(window.innerHeight+window.scrollY)>=document.body.scrollHeight-40;
+  const scrollable=document.body.scrollHeight>window.innerHeight+150;
+  bottom.className='scroll-bottom'+(scrollable&&!atBottom?' visible':'');
+}
+window.addEventListener('scroll',updateScrollButtons);
+window.addEventListener('resize',updateScrollButtons);
+</script>
+
+
+</body>
+</html>
